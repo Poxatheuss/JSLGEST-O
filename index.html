@@ -904,38 +904,58 @@
             });
         });
         
-        // Função para carregar dados do Firebase
-        function carregarDadosFirebase() {
-            // Carregar EPIs
-            database.ref('epis').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                epis = dados ? Object.values(dados) : [];
-                // Atualizar status dos EPIs
-                epis.forEach(epi => {
-                    epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
-                });
-                renderizarTabelaEPIs();
-                atualizarDashboard();
-                mostrarMensagem('Dados de EPIs carregados!');
-            });
-
-            // Carregar Estoque
-            database.ref('estoque').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                estoque = dados ? Object.values(dados) : [];
-                renderizarTabelaEstoque();
-                atualizarDashboard();
-            });
-
-            // Carregar Entregas
-            database.ref('entregas').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                entregas = dados ? Object.values(dados) : [];
-                renderizarTabelaEntregas();
-                atualizarDashboard();
-            });
+        // Função para carregar dados do Firebase - CORRIGIDA
+function carregarDadosFirebase() {
+    // Carregar EPIs
+    database.ref('epis').on('value', (snapshot) => {
+        const dados = snapshot.val();
+        if (dados) {
+            epis = Object.keys(dados).map(key => ({
+                id: key,
+                ...dados[key]
+            }));
+        } else {
+            epis = [];
         }
+        // Atualizar status dos EPIs
+        epis.forEach(epi => {
+            epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
+        });
+        renderizarTabelaEPIs();
+        atualizarDashboard();
+    });
 
+    // Carregar Estoque
+    database.ref('estoque').on('value', (snapshot) => {
+        const dados = snapshot.val();
+        if (dados) {
+            estoque = Object.keys(dados).map(key => ({
+                id: key,
+                ...dados[key]
+            }));
+        } else {
+            estoque = [];
+        }
+        renderizarTabelaEstoque();
+        atualizarDashboard();
+    });
+
+    // Carregar Entregas
+    database.ref('entregas').on('value', (snapshot) => {
+        const dados = snapshot.val();
+        if (dados) {
+            entregas = Object.keys(dados).map(key => ({
+                id: key,
+                ...dados[key]
+            }));
+        } else {
+            entregas = [];
+        }
+        renderizarTabelaEntregas();
+        atualizarDashboard();
+    });
+}
+        
         // Função para salvar dados no Firebase
         async function salvarDadosFirebase(tipo, dados, id = null) {
             try {
@@ -1292,44 +1312,62 @@
             }
         }
         
-        // Função para excluir item
-        async function excluirItem(tipo, index) {
-            if (!confirm('Tem certeza que deseja excluir este item?')) return;
-            
-            let id;
-            let epiId = null;
-            
-            if (tipo === 'epi') {
-                id = epis[index].id;
-                epiId = id;
-            } else if (tipo === 'estoque') {
-                id = estoque[index].id;
-            } else if (tipo === 'entrega') {
-                id = entregas[index].id;
-                epiId = entregas[index].epiId;
+        // Função para excluir item - CORRIGIDA
+async function excluirItem(tipo, index) {
+    if (!confirm('Tem certeza que deseja excluir este item?')) return;
+    
+    let id;
+    let epiId = null;
+    
+    // Obter o ID correto baseado no tipo e índice
+    if (tipo === 'epi') {
+        if (!epis[index]) {
+            mostrarMensagem('Erro: EPI não encontrado!', 'error');
+            return;
+        }
+        id = epis[index].id;
+        epiId = id;
+    } else if (tipo === 'estoque') {
+        if (!estoque[index]) {
+            mostrarMensagem('Erro: Item do estoque não encontrado!', 'error');
+            return;
+        }
+        id = estoque[index].id;
+    } else if (tipo === 'entrega') {
+        if (!entregas[index]) {
+            mostrarMensagem('Erro: Entrega não encontrada!', 'error');
+            return;
+        }
+        id = entregas[index].id;
+        epiId = entregas[index].epiId;
+    }
+    
+    if (!id) {
+        mostrarMensagem('Erro: Item não encontrado!', 'error');
+        return;
+    }
+    
+    const sucesso = await excluirDadosFirebase(tipo, id);
+    
+    if (sucesso) {
+        // Se excluímos um EPI, também excluir estoque e entregas relacionados
+        if (tipo === 'epi' && epiId) {
+            // Encontrar e excluir estoque relacionado
+            const estoqueRelacionado = estoque.find(e => e.epiId === epiId);
+            if (estoqueRelacionado) {
+                await excluirDadosFirebase('estoque', estoqueRelacionado.id);
             }
             
-            const sucesso = await excluirDadosFirebase(tipo, id);
-            
-            if (sucesso) {
-                // Se excluímos um EPI, também excluir estoque e entregas relacionados
-                if (tipo === 'epi' && epiId) {
-                    // Encontrar e excluir estoque relacionado
-                    const estoqueRelacionado = estoque.find(e => e.epiId === epiId);
-                    if (estoqueRelacionado) {
-                        await excluirDadosFirebase('estoque', estoqueRelacionado.id);
-                    }
-                    
-                    // Encontrar e excluir entregas relacionadas
-                    const entregasRelacionadas = entregas.filter(e => e.epiId === epiId);
-                    for (const entrega of entregasRelacionadas) {
-                        await excluirDadosFirebase('entregas', entrega.id);
-                    }
-                }
-                
-                mostrarMensagem('Item excluído com sucesso!');
+            // Encontrar e excluir entregas relacionadas
+            const entregasRelacionadas = entregas.filter(e => e.epiId === epiId);
+            for (const entrega of entregasRelacionadas) {
+                await excluirDadosFirebase('entregas', entrega.id);
             }
         }
+        
+        mostrarMensagem('Item excluído com sucesso!');
+    }
+}
         
         // Função para renderizar todas as tabelas
         function renderizarTabelas() {
