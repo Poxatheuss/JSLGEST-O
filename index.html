@@ -483,11 +483,47 @@
             background-color: var(--accent-color);
             color: white;
         }
+
+        /* Loading overlay */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 18px;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="connection-status" id="connection-status">Conectando...</div>
     <div class="save-indicator" id="save-indicator">Dados salvos com sucesso!</div>
+    <div class="loading" id="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div>Processando...</div>
+    </div>
     
     <div class="container">
         <div class="logo">
@@ -902,59 +938,62 @@
                 if (event.target === modalEstoque) fecharModalEstoque();
                 if (event.target === modalEntrega) fecharModalEntrega();
             });
+
+            // Iniciar atualização automática de status
+            setInterval(atualizarStatusAutomatico, 60000);
         });
         
         // Função para carregar dados do Firebase - CORRIGIDA
-function carregarDadosFirebase() {
-    // Carregar EPIs
-    database.ref('epis').on('value', (snapshot) => {
-        const dados = snapshot.val();
-        if (dados) {
-            epis = Object.keys(dados).map(key => ({
-                id: key,
-                ...dados[key]
-            }));
-        } else {
-            epis = [];
-        }
-        // Atualizar status dos EPIs
-        epis.forEach(epi => {
-            epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
-        });
-        renderizarTabelaEPIs();
-        atualizarDashboard();
-    });
+        function carregarDadosFirebase() {
+            // Carregar EPIs
+            database.ref('epis').on('value', (snapshot) => {
+                const dados = snapshot.val();
+                if (dados) {
+                    epis = Object.keys(dados).map(key => ({
+                        id: key,
+                        ...dados[key]
+                    }));
+                    // Calcular status para cada EPI
+                    epis.forEach(epi => {
+                        epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
+                    });
+                } else {
+                    epis = [];
+                }
+                renderizarTabelaEPIs();
+                atualizarDashboard();
+            });
 
-    // Carregar Estoque
-    database.ref('estoque').on('value', (snapshot) => {
-        const dados = snapshot.val();
-        if (dados) {
-            estoque = Object.keys(dados).map(key => ({
-                id: key,
-                ...dados[key]
-            }));
-        } else {
-            estoque = [];
-        }
-        renderizarTabelaEstoque();
-        atualizarDashboard();
-    });
+            // Carregar Estoque
+            database.ref('estoque').on('value', (snapshot) => {
+                const dados = snapshot.val();
+                if (dados) {
+                    estoque = Object.keys(dados).map(key => ({
+                        id: key,
+                        ...dados[key]
+                    }));
+                } else {
+                    estoque = [];
+                }
+                renderizarTabelaEstoque();
+                atualizarDashboard();
+            });
 
-    // Carregar Entregas
-    database.ref('entregas').on('value', (snapshot) => {
-        const dados = snapshot.val();
-        if (dados) {
-            entregas = Object.keys(dados).map(key => ({
-                id: key,
-                ...dados[key]
-            }));
-        } else {
-            entregas = [];
+            // Carregar Entregas
+            database.ref('entregas').on('value', (snapshot) => {
+                const dados = snapshot.val();
+                if (dados) {
+                    entregas = Object.keys(dados).map(key => ({
+                        id: key,
+                        ...dados[key]
+                    }));
+                } else {
+                    entregas = [];
+                }
+                renderizarTabelaEntregas();
+                atualizarDashboard();
+            });
         }
-        renderizarTabelaEntregas();
-        atualizarDashboard();
-    });
-}
         
         // Função para salvar dados no Firebase
         async function salvarDadosFirebase(tipo, dados, id = null) {
@@ -987,6 +1026,11 @@ function carregarDadosFirebase() {
                 return false;
             }
         }
+
+        // Função para mostrar loading
+        function mostrarLoading(mostrar) {
+            document.getElementById('loading').style.display = mostrar ? 'flex' : 'none';
+        }
         
         // Função para mostrar mensagem de salvamento
         function mostrarMensagem(mensagem, tipo = 'success') {
@@ -1011,16 +1055,22 @@ function carregarDadosFirebase() {
             }
         }
         
-        // Função para calcular status do EPI (baseado na planilha)
+        // Função para calcular status do EPI (baseado na planilha) - CORRIGIDA
         function calcularStatusEPI(validadeCA, validadeEPI) {
             const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0); // Remove horas para comparar apenas datas
+            
             const umMes = new Date();
             umMes.setDate(hoje.getDate() + 30);
+            umMes.setHours(0, 0, 0, 0);
             
             if (!validadeCA && !validadeEPI) return "NÃO INFORMADO";
             
             const dataCA = validadeCA ? new Date(validadeCA) : null;
             const dataEPI = validadeEPI ? new Date(validadeEPI) : null;
+            
+            if (dataCA) dataCA.setHours(0, 0, 0, 0);
+            if (dataEPI) dataEPI.setHours(0, 0, 0, 0);
             
             // Verificar se algum está vencido
             if ((dataCA && dataCA < hoje) || (dataEPI && dataEPI < hoje)) {
@@ -1033,6 +1083,31 @@ function carregarDadosFirebase() {
             }
             
             return "VALIDO";
+        }
+
+        // Função para validar datas
+        function validarDatas(validadeCA, validadeEPI) {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            if (validadeCA && new Date(validadeCA) < hoje) {
+                return "A validade do C.A. não pode ser uma data passada";
+            }
+            
+            if (validadeEPI && new Date(validadeEPI) < hoje) {
+                return "A validade do EPI não pode ser uma data passada";
+            }
+            
+            return null;
+        }
+        
+        // Função para atualizar status automaticamente
+        function atualizarStatusAutomatico() {
+            epis.forEach(epi => {
+                epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
+            });
+            renderizarTabelaEPIs();
+            atualizarDashboard();
         }
         
         // Função para calcular status do estoque
@@ -1162,22 +1237,30 @@ function carregarDadosFirebase() {
         // Função para salvar EPI
         async function salvarEpi() {
             const nome = document.getElementById('nome-epi').value;
+            const validadeCA = document.getElementById('validade-ca').value;
+            const validadeEPI = document.getElementById('validade-epi').value;
             
             if (!nome) {
                 alert('Por favor, preencha o nome do EPI.');
                 return;
             }
             
+            // Validar datas
+            const erroData = validarDatas(validadeCA, validadeEPI);
+            if (erroData) {
+                alert(erroData);
+                return;
+            }
+            
+            mostrarLoading(true);
+            
             const epi = {
                 nome: nome,
                 fabricante: document.getElementById('fabricante-epi').value,
                 ca: document.getElementById('ca-epi').value,
-                validadeCA: document.getElementById('validade-ca').value,
-                validadeEPI: document.getElementById('validade-epi').value,
-                status: calcularStatusEPI(
-                    document.getElementById('validade-ca').value,
-                    document.getElementById('validade-epi').value
-                ),
+                validadeCA: validadeCA,
+                validadeEPI: validadeEPI,
+                status: calcularStatusEPI(validadeCA, validadeEPI),
                 dataAtualizacao: new Date().toISOString()
             };
             
@@ -1187,6 +1270,8 @@ function carregarDadosFirebase() {
             }
             
             const sucesso = await salvarDadosFirebase('epis', epi, epiId);
+            
+            mostrarLoading(false);
             
             if (sucesso) {
                 fecharModalEpi();
@@ -1210,6 +1295,8 @@ function carregarDadosFirebase() {
                 alert('EPI não encontrado.');
                 return;
             }
+            
+            mostrarLoading(true);
             
             // Calcular saídas (soma das quantidades entregues para este EPI)
             const saidas = entregas
@@ -1241,6 +1328,8 @@ function carregarDadosFirebase() {
             
             const sucesso = await salvarDadosFirebase('estoque', itemEstoque, estoqueId);
             
+            mostrarLoading(false);
+            
             if (sucesso) {
                 fecharModalEstoque();
                 mostrarMensagem('Estoque atualizado com sucesso!');
@@ -1271,6 +1360,8 @@ function carregarDadosFirebase() {
                 alert(`Estoque insuficiente. Disponível: ${itemEstoque.estoqueAtual}`);
                 return;
             }
+            
+            mostrarLoading(true);
             
             const valorUnitario = itemEstoque ? itemEstoque.valorUnitario : 0;
             const valorTotal = quantidade * valorUnitario;
@@ -1307,67 +1398,69 @@ function carregarDadosFirebase() {
                     await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
                 }
                 
+                mostrarLoading(false);
                 fecharModalEntrega();
                 mostrarMensagem('Entrega registrada com sucesso!');
+            } else {
+                mostrarLoading(false);
             }
         }
         
         // Função para excluir item - CORRIGIDA
-async function excluirItem(tipo, index) {
-    if (!confirm('Tem certeza que deseja excluir este item?')) return;
-    
-    let id;
-    let epiId = null;
-    
-    // Obter o ID correto baseado no tipo e índice
-    if (tipo === 'epi') {
-        if (!epis[index]) {
-            mostrarMensagem('Erro: EPI não encontrado!', 'error');
-            return;
-        }
-        id = epis[index].id;
-        epiId = id;
-    } else if (tipo === 'estoque') {
-        if (!estoque[index]) {
-            mostrarMensagem('Erro: Item do estoque não encontrado!', 'error');
-            return;
-        }
-        id = estoque[index].id;
-    } else if (tipo === 'entrega') {
-        if (!entregas[index]) {
-            mostrarMensagem('Erro: Entrega não encontrada!', 'error');
-            return;
-        }
-        id = entregas[index].id;
-        epiId = entregas[index].epiId;
-    }
-    
-    if (!id) {
-        mostrarMensagem('Erro: Item não encontrado!', 'error');
-        return;
-    }
-    
-    const sucesso = await excluirDadosFirebase(tipo, id);
-    
-    if (sucesso) {
-        // Se excluímos um EPI, também excluir estoque e entregas relacionados
-        if (tipo === 'epi' && epiId) {
-            // Encontrar e excluir estoque relacionado
-            const estoqueRelacionado = estoque.find(e => e.epiId === epiId);
-            if (estoqueRelacionado) {
-                await excluirDadosFirebase('estoque', estoqueRelacionado.id);
+        async function excluirItem(tipo, index) {
+            if (!confirm('Tem certeza que deseja excluir este item?')) return;
+            
+            let id;
+            let arrayRef;
+            
+            // Determinar qual array e ID usar baseado no tipo
+            if (tipo === 'epi') {
+                if (!epis[index]) {
+                    mostrarMensagem('Erro: EPI não encontrado!', 'error');
+                    return;
+                }
+                id = epis[index].id;
+                arrayRef = epis;
+            } else if (tipo === 'estoque') {
+                if (!estoque[index]) {
+                    mostrarMensagem('Erro: Item do estoque não encontrado!', 'error');
+                    return;
+                }
+                id = estoque[index].id;
+                arrayRef = estoque;
+            } else if (tipo === 'entrega') {
+                if (!entregas[index]) {
+                    mostrarMensagem('Erro: Entrega não encontrada!', 'error');
+                    return;
+                }
+                id = entregas[index].id;
+                arrayRef = entregas;
             }
             
-            // Encontrar e excluir entregas relacionadas
-            const entregasRelacionadas = entregas.filter(e => e.epiId === epiId);
-            for (const entrega of entregasRelacionadas) {
-                await excluirDadosFirebase('entregas', entrega.id);
+            if (!id) {
+                mostrarMensagem('Erro: ID do item não encontrado!', 'error');
+                return;
             }
+            
+            mostrarLoading(true);
+            
+            try {
+                // Excluir do Firebase
+                await database.ref(`${tipo}/${id}`).remove();
+                
+                // Mostrar mensagem de sucesso
+                mostrarMensagem('Item excluído com sucesso!');
+                
+                // Os dados serão automaticamente atualizados pelo listener do Firebase
+                // então não precisamos remover manualmente do array
+                
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                mostrarMensagem('Erro ao excluir item!', 'error');
+            }
+            
+            mostrarLoading(false);
         }
-        
-        mostrarMensagem('Item excluído com sucesso!');
-    }
-}
         
         // Função para renderizar todas as tabelas
         function renderizarTabelas() {
@@ -1396,6 +1489,7 @@ async function excluirItem(tipo, index) {
                 if (epi.status === 'VALIDO') statusClass = 'status-valid';
                 else if (epi.status === 'MENOS DE 1 MES') statusClass = 'status-warning';
                 else if (epi.status === 'VENCEU') statusClass = 'status-expired';
+                else if (epi.status === 'NÃO INFORMADO') statusClass = 'status-warning';
                 
                 tr.innerHTML = `
                     <td>${epi.nome}</td>
