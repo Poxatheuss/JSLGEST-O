@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        /* Seu CSS existente permanece igual */
+        /* Mantenha todo o CSS anterior igual */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -945,9 +945,13 @@
         
         // Função para carregar dados do Firebase - CORRIGIDA
         function carregarDadosFirebase() {
+            console.log('Carregando dados do Firebase...');
+            
             // Carregar EPIs
             database.ref('epis').on('value', (snapshot) => {
                 const dados = snapshot.val();
+                console.log('Dados de EPIs recebidos:', dados);
+                
                 if (dados) {
                     epis = Object.keys(dados).map(key => ({
                         id: key,
@@ -967,6 +971,8 @@
             // Carregar Estoque
             database.ref('estoque').on('value', (snapshot) => {
                 const dados = snapshot.val();
+                console.log('Dados de Estoque recebidos:', dados);
+                
                 if (dados) {
                     estoque = Object.keys(dados).map(key => ({
                         id: key,
@@ -982,6 +988,8 @@
             // Carregar Entregas
             database.ref('entregas').on('value', (snapshot) => {
                 const dados = snapshot.val();
+                console.log('Dados de Entregas recebidos:', dados);
+                
                 if (dados) {
                     entregas = Object.keys(dados).map(key => ({
                         id: key,
@@ -1001,11 +1009,13 @@
                 if (id) {
                     // Atualizar item existente
                     await database.ref(`${tipo}/${id}`).set(dados);
+                    console.log(`Item ${id} atualizado em ${tipo}`);
                 } else {
                     // Criar novo item
                     const novoId = database.ref(tipo).push().key;
                     dados.id = novoId;
                     await database.ref(`${tipo}/${novoId}`).set(dados);
+                    console.log(`Novo item criado em ${tipo} com ID: ${novoId}`);
                 }
                 return true;
             } catch (error) {
@@ -1015,10 +1025,12 @@
             }
         }
 
-        // Função para excluir dados do Firebase
+        // Função para excluir dados do Firebase - CORRIGIDA
         async function excluirDadosFirebase(tipo, id) {
             try {
+                console.log(`Tentando excluir ${tipo}/${id}`);
                 await database.ref(`${tipo}/${id}`).remove();
+                console.log(`Item ${id} excluído com sucesso de ${tipo}`);
                 return true;
             } catch (error) {
                 console.error('Erro ao excluir do Firebase:', error);
@@ -1406,60 +1418,83 @@
             }
         }
         
-        // Função para excluir item - CORRIGIDA
+        // Função para excluir item - COMPLETAMENTE REFEITA
         async function excluirItem(tipo, index) {
-            if (!confirm('Tem certeza que deseja excluir este item?')) return;
+            console.log(`Tentando excluir ${tipo} no índice ${index}`);
             
-            let id;
-            let arrayRef;
-            
-            // Determinar qual array e ID usar baseado no tipo
-            if (tipo === 'epi') {
-                if (!epis[index]) {
-                    mostrarMensagem('Erro: EPI não encontrado!', 'error');
-                    return;
-                }
-                id = epis[index].id;
-                arrayRef = epis;
-            } else if (tipo === 'estoque') {
-                if (!estoque[index]) {
-                    mostrarMensagem('Erro: Item do estoque não encontrado!', 'error');
-                    return;
-                }
-                id = estoque[index].id;
-                arrayRef = estoque;
-            } else if (tipo === 'entrega') {
-                if (!entregas[index]) {
-                    mostrarMensagem('Erro: Entrega não encontrada!', 'error');
-                    return;
-                }
-                id = entregas[index].id;
-                arrayRef = entregas;
-            }
-            
-            if (!id) {
-                mostrarMensagem('Erro: ID do item não encontrado!', 'error');
+            if (!confirm('Tem certeza que deseja excluir este item?')) {
                 return;
             }
             
             mostrarLoading(true);
             
             try {
-                // Excluir do Firebase
-                await database.ref(`${tipo}/${id}`).remove();
+                let id;
                 
-                // Mostrar mensagem de sucesso
+                // Encontrar o ID correto baseado no tipo
+                if (tipo === 'epi') {
+                    if (index < 0 || index >= epis.length) {
+                        throw new Error('Índice de EPI inválido');
+                    }
+                    id = epis[index].id;
+                    console.log(`Excluindo EPI: ${epis[index].nome} (ID: ${id})`);
+                    
+                    await database.ref(`epis/${id}`).remove();
+                    
+                    // Também excluir estoque e entregas relacionados
+                    const estoqueRelacionado = estoque.find(item => item.epiId === id);
+                    if (estoqueRelacionado) {
+                        await database.ref(`estoque/${estoqueRelacionado.id}`).remove();
+                        console.log(`Estoque relacionado excluído: ${estoqueRelacionado.id}`);
+                    }
+                    
+                    const entregasRelacionadas = entregas.filter(item => item.epiId === id);
+                    for (const entrega of entregasRelacionadas) {
+                        await database.ref(`entregas/${entrega.id}`).remove();
+                        console.log(`Entrega relacionada excluída: ${entrega.id}`);
+                    }
+                    
+                } else if (tipo === 'estoque') {
+                    if (index < 0 || index >= estoque.length) {
+                        throw new Error('Índice de estoque inválido');
+                    }
+                    id = estoque[index].id;
+                    console.log(`Excluindo estoque: ${estoque[index].epiNome} (ID: ${id})`);
+                    await database.ref(`estoque/${id}`).remove();
+                    
+                } else if (tipo === 'entrega') {
+                    if (index < 0 || index >= entregas.length) {
+                        throw new Error('Índice de entrega inválido');
+                    }
+                    id = entregas[index].id;
+                    console.log(`Excluindo entrega: ${entregas[index].epiNome} (ID: ${id})`);
+                    await database.ref(`entregas/${id}`).remove();
+                    
+                    // Atualizar estoque após excluir entrega
+                    const entrega = entregas[index];
+                    const itemEstoque = estoque.find(item => item.epiId === entrega.epiId);
+                    if (itemEstoque) {
+                        itemEstoque.saidas -= entrega.quantidade;
+                        itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
+                        itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
+                        itemEstoque.gastoTotal = itemEstoque.saidas * itemEstoque.valorUnitario;
+                        itemEstoque.dataAtualizacao = new Date().toISOString();
+                        
+                        await database.ref(`estoque/${itemEstoque.id}`).set(itemEstoque);
+                    }
+                } else {
+                    throw new Error('Tipo inválido para exclusão');
+                }
+                
+                console.log(`Item ${id} excluído com sucesso do ${tipo}`);
                 mostrarMensagem('Item excluído com sucesso!');
                 
-                // Os dados serão automaticamente atualizados pelo listener do Firebase
-                // então não precisamos remover manualmente do array
-                
             } catch (error) {
-                console.error('Erro ao excluir:', error);
-                mostrarMensagem('Erro ao excluir item!', 'error');
+                console.error('Erro detalhado na exclusão:', error);
+                mostrarMensagem(`Erro ao excluir item: ${error.message}`, 'error');
+            } finally {
+                mostrarLoading(false);
             }
-            
-            mostrarLoading(false);
         }
         
         // Função para renderizar todas as tabelas
@@ -1561,6 +1596,7 @@
             const entregasOrdenadas = [...entregas].sort((a, b) => new Date(b.data) - new Date(a.data));
             
             entregasOrdenadas.forEach((entrega, index) => {
+                const originalIndex = entregas.findIndex(e => e.id === entrega.id);
                 const tr = document.createElement('tr');
                 
                 tr.innerHTML = `
@@ -1573,8 +1609,8 @@
                     <td>${entrega.valorUnitario ? 'R$ ' + entrega.valorUnitario.toFixed(2) : '-'}</td>
                     <td>${entrega.valorTotal ? 'R$ ' + entrega.valorTotal.toFixed(2) : '-'}</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="abrirModalEntrega(${entregas.findIndex(e => e.id === entrega.id)})">Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirItem('entrega', ${entregas.findIndex(e => e.id === entrega.id)})">Excluir</button>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalEntrega(${originalIndex})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirItem('entrega', ${originalIndex})">Excluir</button>
                     </td>
                 `;
                 
