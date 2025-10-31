@@ -1068,7 +1068,7 @@
             });
         }
 
-        // Função para recalcular estoque - CORRIGIDA
+        // Função para recalcular estoque
         function recalcularEstoque(epiId) {
             const itemEstoque = estoque.find(item => item.epiId === epiId);
             if (!itemEstoque) return;
@@ -1164,25 +1164,30 @@
             }
         }
         
-        // Função para calcular status do EPI
+        // Função para calcular status do EPI - CORRIGIDA (problema de fuso horário)
         function calcularStatusEPI(validadeCA, validadeEPI) {
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            
-            const umMes = new Date();
-            umMes.setDate(hoje.getDate() + 30);
-            umMes.setHours(0, 0, 0, 0);
-            
             if (!validadeCA && !validadeEPI) return "NÃO INFORMADO";
             
-            const dataCA = validadeCA ? new Date(validadeCA) : null;
-            const dataEPI = validadeEPI ? new Date(validadeEPI) : null;
+            const hoje = new Date();
+            // Usar apenas a data, ignorando horas para evitar problemas de fuso horário
+            const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
             
-            if (dataCA) dataCA.setHours(0, 0, 0, 0);
-            if (dataEPI) dataEPI.setHours(0, 0, 0, 0);
+            const umMes = new Date(hojeDate);
+            umMes.setDate(hojeDate.getDate() + 30);
+            
+            // Função auxiliar para converter string de data para Date sem problemas de fuso horário
+            function parseDateSafe(dateString) {
+                if (!dateString) return null;
+                const parts = dateString.split('-');
+                if (parts.length !== 3) return null;
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            
+            const dataCA = parseDateSafe(validadeCA);
+            const dataEPI = parseDateSafe(validadeEPI);
             
             // Verificar se algum está vencido
-            if ((dataCA && dataCA < hoje) || (dataEPI && dataEPI < hoje)) {
+            if ((dataCA && dataCA < hojeDate) || (dataEPI && dataEPI < hojeDate)) {
                 return "VENCEU";
             }
             
@@ -1194,20 +1199,57 @@
             return "VALIDO";
         }
 
-        // Função para validar datas
+        // Função para validar datas - CORRIGIDA (problema de fuso horário)
         function validarDatas(validadeCA, validadeEPI) {
+            // Usar a data atual sem horas para comparação
             const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
+            const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
             
-            if (validadeCA && new Date(validadeCA) < hoje) {
+            // Função auxiliar para converter string de data para Date sem problemas de fuso horário
+            function parseDateSafe(dateString) {
+                if (!dateString) return null;
+                const parts = dateString.split('-');
+                if (parts.length !== 3) return null;
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            
+            const dataCA = parseDateSafe(validadeCA);
+            const dataEPI = parseDateSafe(validadeEPI);
+            
+            if (dataCA && dataCA < hojeDate) {
                 return "A validade do C.A. não pode ser uma data passada";
             }
             
-            if (validadeEPI && new Date(validadeEPI) < hoje) {
+            if (dataEPI && dataEPI < hojeDate) {
                 return "A validade do EPI não pode ser uma data passada";
             }
             
             return null;
+        }
+
+        // Função para formatar data no formato brasileiro - CORRIGIDA
+        function formatarData(dataString) {
+            if (!dataString) return '-';
+            
+            // Se já estiver no formato YYYY-MM-DD
+            if (dataString.includes('-')) {
+                const parts = dataString.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            }
+            
+            // Se for um objeto Date ou string ISO
+            try {
+                const data = new Date(dataString);
+                if (!isNaN(data.getTime())) {
+                    return data.toLocaleDateString('pt-BR');
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e);
+            }
+            
+            return dataString; // Fallback
         }
         
         // Função para atualizar status automaticamente
@@ -1368,7 +1410,7 @@
             modalEntrega.style.display = 'none';
         }
         
-        // Função para salvar EPI
+        // Função para salvar EPI - CORRIGIDA (problema de fuso horário)
         async function salvarEpi() {
             const nome = document.getElementById('nome-epi').value;
             const validadeCA = document.getElementById('validade-ca').value;
@@ -1388,12 +1430,14 @@
             
             mostrarLoading(true);
             
+            // As datas já estão no formato YYYY-MM-DD do input date
+            // Não precisamos converter, vamos usar diretamente
             const epi = {
                 nome: nome,
                 fabricante: document.getElementById('fabricante-epi').value,
                 ca: document.getElementById('ca-epi').value,
-                validadeCA: validadeCA,
-                validadeEPI: validadeEPI,
+                validadeCA: validadeCA, // Já está no formato correto
+                validadeEPI: validadeEPI, // Já está no formato correto
                 status: calcularStatusEPI(validadeCA, validadeEPI),
                 dataAtualizacao: new Date().toISOString()
             };
@@ -1470,7 +1514,7 @@
             }
         }
 
-        // Função para salvar entrada no estoque - NOVA FUNÇÃO
+        // Função para salvar entrada no estoque
         async function salvarEntradaEstoque() {
             const epiId = document.getElementById('epi-entrada').value;
             const quantidade = parseInt(document.getElementById('quantidade-entrada').value);
@@ -1579,7 +1623,7 @@
             const sucesso = await salvarDadosFirebase('entregas', entrega, entregaId);
             
             if (sucesso) {
-                // Atualizar estoque - CORRIGIDO
+                // Atualizar estoque
                 itemEstoque.saidas += quantidade;
                 itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
                 itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
@@ -1596,7 +1640,7 @@
             }
         }
         
-        // Função para excluir item - CORRIGIDA
+        // Função para excluir item
         async function excluirItem(tipo, index) {
             console.log(`Tentando excluir ${tipo} no índice ${index}`);
             
@@ -1650,7 +1694,7 @@
                     
                     await database.ref(`entregas/${id}`).remove();
                     
-                    // Atualizar estoque após excluir entrega - CORRIGIDO
+                    // Atualizar estoque após excluir entrega
                     const itemEstoque = estoque.find(item => item.epiId === entrega.epiId);
                     if (itemEstoque) {
                         // Recalcular saídas baseado nas entregas restantes
@@ -1720,8 +1764,8 @@
                     <td>${epi.nome}</td>
                     <td>${epi.fabricante || '-'}</td>
                     <td>${epi.ca || '-'}</td>
-                    <td>${epi.validadeCA ? new Date(epi.validadeCA).toLocaleDateString('pt-BR') : '-'}</td>
-                    <td>${epi.validadeEPI ? new Date(epi.validadeEPI).toLocaleDateString('pt-BR') : '-'}</td>
+                    <td>${epi.validadeCA ? formatarData(epi.validadeCA) : '-'}</td>
+                    <td>${epi.validadeEPI ? formatarData(epi.validadeEPI) : '-'}</td>
                     <td><span class="status-badge ${statusClass}">${epi.status}</span></td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="abrirModalEpi(${index})">Editar</button>
@@ -1790,7 +1834,7 @@
                 const tr = document.createElement('tr');
                 
                 tr.innerHTML = `
-                    <td>${new Date(entrega.data).toLocaleDateString('pt-BR')}</td>
+                    <td>${formatarData(entrega.data)}</td>
                     <td>${entrega.funcionario}</td>
                     <td>${entrega.cargo || '-'}</td>
                     <td>${entrega.setor || '-'}</td>
@@ -1888,8 +1932,8 @@
                     epi.nome,
                     epi.fabricante || '-',
                     epi.ca || '-',
-                    epi.validadeCA ? new Date(epi.validadeCA).toLocaleDateString('pt-BR') : '-',
-                    epi.validadeEPI ? new Date(epi.validadeEPI).toLocaleDateString('pt-BR') : '-',
+                    epi.validadeCA ? formatarData(epi.validadeCA) : '-',
+                    epi.validadeEPI ? formatarData(epi.validadeEPI) : '-',
                     epi.status
                 ];
                 tableRows.push(epiData);
@@ -1967,7 +2011,7 @@
             
             entregas.forEach(entrega => {
                 const entregaData = [
-                    new Date(entrega.data).toLocaleDateString('pt-BR'),
+                    formatarData(entrega.data),
                     entrega.funcionario,
                     entrega.cargo || '-',
                     entrega.setor || '-',
