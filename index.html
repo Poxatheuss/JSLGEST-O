@@ -205,6 +205,17 @@
             font-size: 12px;
         }
         
+        .btn-info {
+            background: linear-gradient(to right, #17a2b8, #138496);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(to right, #138496, #117a8b);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
         .actions {
             margin-bottom: 20px;
             display: flex;
@@ -604,6 +615,9 @@
                 <button class="btn btn-primary" id="btn-adicionar-estoque">
                     ➕ Adicionar ao Estoque
                 </button>
+                <button class="btn btn-info" id="btn-entrada-estoque">
+                    📥 Nova Entrada
+                </button>
                 <div class="search-box">
                     <input type="text" id="search-estoque" placeholder="Buscar no estoque...">
                     <button onclick="filtrarEstoque()">🔍 Buscar</button>
@@ -765,7 +779,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="entradas-estoque" class="required">ENTRADAS:</label>
+                    <label for="entradas-estoque" class="required">QUANTIDADE INICIAL:</label>
                     <input type="number" id="entradas-estoque" min="0" required>
                 </div>
             </div>
@@ -788,6 +802,48 @@
                 </button>
                 <button class="btn btn-success" id="btn-salvar-estoque">
                     💾 Salvar Estoque
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Nova Entrada no Estoque -->
+    <div class="modal" id="modal-entrada-estoque">
+        <div class="modal-content">
+            <h2>Nova Entrada no Estoque</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="epi-entrada" class="required">EPI:</label>
+                    <select id="epi-entrada" required>
+                        <option value="">Selecione um EPI...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantidade-entrada" class="required">QUANTIDADE A ADICIONAR:</label>
+                    <input type="number" id="quantidade-entrada" min="1" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="valor-unitario-entrada">NOVO VALOR UNITÁRIO (R$):</label>
+                    <input type="number" id="valor-unitario-entrada" min="0" step="0.01" placeholder="Deixe em branco para manter o valor atual">
+                </div>
+                
+                <div class="form-group">
+                    <label for="data-entrada">DATA DA ENTRADA:</label>
+                    <input type="date" id="data-entrada">
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn btn-danger" id="btn-cancelar-entrada">
+                    ✖ Cancelar
+                </button>
+                <button class="btn btn-success" id="btn-salvar-entrada">
+                    💾 Registrar Entrada
                 </button>
             </div>
         </div>
@@ -883,6 +939,7 @@
         // Modais
         const modalEpi = document.getElementById('modal-epi');
         const modalEstoque = document.getElementById('modal-estoque');
+        const modalEntradaEstoque = document.getElementById('modal-entrada-estoque');
         const modalEntrega = document.getElementById('modal-entrega');
         
         // Monitorar status da conexão
@@ -911,14 +968,17 @@
             // Event listeners para botões
             document.getElementById('btn-adicionar-epi').addEventListener('click', () => abrirModalEpi());
             document.getElementById('btn-adicionar-estoque').addEventListener('click', () => abrirModalEstoque());
+            document.getElementById('btn-entrada-estoque').addEventListener('click', () => abrirModalEntradaEstoque());
             document.getElementById('btn-nova-entrega').addEventListener('click', () => abrirModalEntrega());
             
             document.getElementById('btn-cancelar-epi').addEventListener('click', () => fecharModalEpi());
             document.getElementById('btn-cancelar-estoque').addEventListener('click', () => fecharModalEstoque());
+            document.getElementById('btn-cancelar-entrada').addEventListener('click', () => fecharModalEntradaEstoque());
             document.getElementById('btn-cancelar-entrega').addEventListener('click', () => fecharModalEntrega());
             
             document.getElementById('btn-salvar-epi').addEventListener('click', salvarEpi);
             document.getElementById('btn-salvar-estoque').addEventListener('click', salvarEstoque);
+            document.getElementById('btn-salvar-entrada').addEventListener('click', salvarEntradaEstoque);
             document.getElementById('btn-salvar-entrega').addEventListener('click', salvarEntrega);
             
             // Event listeners para relatórios
@@ -936,6 +996,7 @@
             window.addEventListener('click', function(event) {
                 if (event.target === modalEpi) fecharModalEpi();
                 if (event.target === modalEstoque) fecharModalEstoque();
+                if (event.target === modalEntradaEstoque) fecharModalEntradaEstoque();
                 if (event.target === modalEntrega) fecharModalEntrega();
             });
 
@@ -943,7 +1004,7 @@
             setInterval(atualizarStatusAutomatico, 60000);
         });
         
-        // Função para carregar dados do Firebase - CORRIGIDA
+        // Função para carregar dados do Firebase
         function carregarDadosFirebase() {
             console.log('Carregando dados do Firebase...');
             
@@ -978,6 +1039,10 @@
                         id: key,
                         ...dados[key]
                     }));
+                    // Recalcular estoque atual para garantir consistência
+                    estoque.forEach(item => {
+                        recalcularEstoque(item.epiId);
+                    });
                 } else {
                     estoque = [];
                 }
@@ -1002,6 +1067,38 @@
                 atualizarDashboard();
             });
         }
+
+        // Função para recalcular estoque - CORRIGIDA
+        function recalcularEstoque(epiId) {
+            const itemEstoque = estoque.find(item => item.epiId === epiId);
+            if (!itemEstoque) return;
+
+            // Recalcular saídas baseado nas entregas atuais
+            const saidasAtualizadas = entregas
+                .filter(entrega => entrega.epiId === epiId)
+                .reduce((total, entrega) => total + entrega.quantidade, 0);
+
+            // Recalcular estoque atual
+            const estoqueAtualAtualizado = itemEstoque.entradas - saidasAtualizadas;
+            
+            // Atualizar apenas se houver diferença
+            if (itemEstoque.saidas !== saidasAtualizadas || itemEstoque.estoqueAtual !== estoqueAtualAtualizado) {
+                itemEstoque.saidas = saidasAtualizadas;
+                itemEstoque.estoqueAtual = estoqueAtualAtualizado;
+                itemEstoque.status = calcularStatusEstoque(estoqueAtualAtualizado, itemEstoque.quantidadeMinima);
+                itemEstoque.gastoTotal = saidasAtualizadas * (itemEstoque.valorUnitario || 0);
+                itemEstoque.dataAtualizacao = new Date().toISOString();
+
+                // Salvar no Firebase
+                database.ref(`estoque/${itemEstoque.id}`).update({
+                    saidas: itemEstoque.saidas,
+                    estoqueAtual: itemEstoque.estoqueAtual,
+                    status: itemEstoque.status,
+                    gastoTotal: itemEstoque.gastoTotal,
+                    dataAtualizacao: itemEstoque.dataAtualizacao
+                });
+            }
+        }
         
         // Função para salvar dados no Firebase
         async function salvarDadosFirebase(tipo, dados, id = null) {
@@ -1025,7 +1122,7 @@
             }
         }
 
-        // Função para excluir dados do Firebase - CORRIGIDA
+        // Função para excluir dados do Firebase
         async function excluirDadosFirebase(tipo, id) {
             try {
                 console.log(`Tentando excluir ${tipo}/${id}`);
@@ -1067,10 +1164,10 @@
             }
         }
         
-        // Função para calcular status do EPI (baseado na planilha) - CORRIGIDA
+        // Função para calcular status do EPI
         function calcularStatusEPI(validadeCA, validadeEPI) {
             const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0); // Remove horas para comparar apenas datas
+            hoje.setHours(0, 0, 0, 0);
             
             const umMes = new Date();
             umMes.setDate(hoje.getDate() + 30);
@@ -1192,6 +1289,27 @@
             
             modalEstoque.style.display = 'flex';
         }
+
+        // Função para abrir modal de entrada no estoque
+        function abrirModalEntradaEstoque() {
+            // Preencher select de EPIs
+            const selectEpi = document.getElementById('epi-entrada');
+            selectEpi.innerHTML = '<option value="">Selecione um EPI...</option>';
+            
+            epis.forEach(epi => {
+                const option = document.createElement('option');
+                option.value = epi.id;
+                option.textContent = epi.nome;
+                selectEpi.appendChild(option);
+            });
+            
+            // Limpar formulário
+            document.getElementById('quantidade-entrada').value = '';
+            document.getElementById('valor-unitario-entrada').value = '';
+            document.getElementById('data-entrada').value = new Date().toISOString().split('T')[0];
+            
+            modalEntradaEstoque.style.display = 'flex';
+        }
         
         // Função para abrir modal de entrega
         function abrirModalEntrega(entregaIndex = -1) {
@@ -1240,6 +1358,10 @@
         
         function fecharModalEstoque() {
             modalEstoque.style.display = 'none';
+        }
+
+        function fecharModalEntradaEstoque() {
+            modalEntradaEstoque.style.display = 'none';
         }
         
         function fecharModalEntrega() {
@@ -1347,6 +1469,59 @@
                 mostrarMensagem('Estoque atualizado com sucesso!');
             }
         }
+
+        // Função para salvar entrada no estoque - NOVA FUNÇÃO
+        async function salvarEntradaEstoque() {
+            const epiId = document.getElementById('epi-entrada').value;
+            const quantidade = parseInt(document.getElementById('quantidade-entrada').value);
+            const novoValorUnitario = document.getElementById('valor-unitario-entrada').value;
+            
+            if (!epiId || isNaN(quantidade) || quantidade < 1) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            const epi = epis.find(e => e.id === epiId);
+            if (!epi) {
+                alert('EPI não encontrado.');
+                return;
+            }
+            
+            mostrarLoading(true);
+            
+            // Verificar se já existe item no estoque
+            let itemEstoque = estoque.find(item => item.epiId === epiId);
+            
+            if (itemEstoque) {
+                // Atualizar estoque existente
+                const novasEntradas = itemEstoque.entradas + quantidade;
+                const estoqueAtual = novasEntradas - itemEstoque.saidas;
+                
+                // Atualizar valor unitário se fornecido
+                if (novoValorUnitario && !isNaN(parseFloat(novoValorUnitario))) {
+                    itemEstoque.valorUnitario = parseFloat(novoValorUnitario);
+                }
+                
+                itemEstoque.entradas = novasEntradas;
+                itemEstoque.estoqueAtual = estoqueAtual;
+                itemEstoque.status = calcularStatusEstoque(estoqueAtual, itemEstoque.quantidadeMinima);
+                itemEstoque.gastoTotal = itemEstoque.saidas * (itemEstoque.valorUnitario || 0);
+                itemEstoque.dataAtualizacao = new Date().toISOString();
+                
+                const sucesso = await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
+                
+                mostrarLoading(false);
+                
+                if (sucesso) {
+                    fecharModalEntradaEstoque();
+                    mostrarMensagem(`Entrada de ${quantidade} unidades registrada com sucesso!`);
+                }
+            } else {
+                // Criar novo item no estoque
+                alert('Este EPI não está cadastrado no estoque. Use "Adicionar ao Estoque" primeiro.');
+                mostrarLoading(false);
+            }
+        }
         
         // Função para salvar entrega
         async function salvarEntrega() {
@@ -1368,14 +1543,19 @@
             
             // Verificar se há estoque suficiente
             const itemEstoque = estoque.find(e => e.epiId === epiId);
-            if (itemEstoque && itemEstoque.estoqueAtual < quantidade) {
+            if (!itemEstoque) {
+                alert('Este EPI não está cadastrado no estoque.');
+                return;
+            }
+            
+            if (itemEstoque.estoqueAtual < quantidade) {
                 alert(`Estoque insuficiente. Disponível: ${itemEstoque.estoqueAtual}`);
                 return;
             }
             
             mostrarLoading(true);
             
-            const valorUnitario = itemEstoque ? itemEstoque.valorUnitario : 0;
+            const valorUnitario = itemEstoque.valorUnitario || 0;
             const valorTotal = quantidade * valorUnitario;
             
             const entrega = {
@@ -1399,16 +1579,14 @@
             const sucesso = await salvarDadosFirebase('entregas', entrega, entregaId);
             
             if (sucesso) {
-                // Atualizar estoque
-                if (itemEstoque) {
-                    itemEstoque.saidas += quantidade;
-                    itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
-                    itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
-                    itemEstoque.gastoTotal = itemEstoque.saidas * itemEstoque.valorUnitario;
-                    itemEstoque.dataAtualizacao = new Date().toISOString();
-                    
-                    await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
-                }
+                // Atualizar estoque - CORRIGIDO
+                itemEstoque.saidas += quantidade;
+                itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
+                itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
+                itemEstoque.gastoTotal = itemEstoque.saidas * itemEstoque.valorUnitario;
+                itemEstoque.dataAtualizacao = new Date().toISOString();
+                
+                await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
                 
                 mostrarLoading(false);
                 fecharModalEntrega();
@@ -1418,7 +1596,7 @@
             }
         }
         
-        // Função para excluir item - COMPLETAMENTE REFEITA
+        // Função para excluir item - CORRIGIDA
         async function excluirItem(tipo, index) {
             console.log(`Tentando excluir ${tipo} no índice ${index}`);
             
@@ -1467,20 +1645,32 @@
                         throw new Error('Índice de entrega inválido');
                     }
                     id = entregas[index].id;
-                    console.log(`Excluindo entrega: ${entregas[index].epiNome} (ID: ${id})`);
+                    const entrega = entregas[index];
+                    console.log(`Excluindo entrega: ${entrega.epiNome} (ID: ${id})`);
+                    
                     await database.ref(`entregas/${id}`).remove();
                     
-                    // Atualizar estoque após excluir entrega
-                    const entrega = entregas[index];
+                    // Atualizar estoque após excluir entrega - CORRIGIDO
                     const itemEstoque = estoque.find(item => item.epiId === entrega.epiId);
                     if (itemEstoque) {
-                        itemEstoque.saidas -= entrega.quantidade;
-                        itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
+                        // Recalcular saídas baseado nas entregas restantes
+                        const saidasAtualizadas = entregas
+                            .filter(e => e.epiId === entrega.epiId && e.id !== id)
+                            .reduce((total, e) => total + e.quantidade, 0);
+                            
+                        itemEstoque.saidas = saidasAtualizadas;
+                        itemEstoque.estoqueAtual = itemEstoque.entradas - saidasAtualizadas;
                         itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
-                        itemEstoque.gastoTotal = itemEstoque.saidas * itemEstoque.valorUnitario;
+                        itemEstoque.gastoTotal = saidasAtualizadas * (itemEstoque.valorUnitario || 0);
                         itemEstoque.dataAtualizacao = new Date().toISOString();
                         
-                        await database.ref(`estoque/${itemEstoque.id}`).set(itemEstoque);
+                        await database.ref(`estoque/${itemEstoque.id}`).update({
+                            saidas: itemEstoque.saidas,
+                            estoqueAtual: itemEstoque.estoqueAtual,
+                            status: itemEstoque.status,
+                            gastoTotal: itemEstoque.gastoTotal,
+                            dataAtualizacao: itemEstoque.dataAtualizacao
+                        });
                     }
                 } else {
                     throw new Error('Tipo inválido para exclusão');
