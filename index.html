@@ -6,12 +6,12 @@
     <title>Sistema Unificado JSL - EPI e 5W2H</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Adicione o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS do Sistema de Gestão de EPI (mantido igual) */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -49,16 +49,8 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
         
-        h1 {
-            text-align: center;
+        h1, h2, h3, h4 {
             color: var(--primary-color);
-            margin-bottom: 25px;
-            font-size: 28px;
-            padding: 15px;
-            background: linear-gradient(135deg, #1a3a5f 0%, #2c3e50 100%);
-            color: white;
-            border-radius: 5px;
-            font-weight: bold;
         }
         
         .dashboard {
@@ -75,6 +67,11 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             text-align: center;
             border-top: 4px solid var(--secondary-color);
+            transition: transform 0.3s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
         }
         
         .dashboard-card.warning {
@@ -137,6 +134,12 @@
         .tab-content {
             display: none;
             padding: 20px 0;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .tab-content.active {
@@ -155,6 +158,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
         }
         
         .btn-primary {
@@ -279,6 +283,10 @@
             background-color: var(--light-gray);
         }
         
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
         .status-badge {
             padding: 5px 10px;
             border-radius: 20px;
@@ -322,6 +330,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s;
         }
         
         .modal-content {
@@ -333,6 +342,12 @@
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         .form-group {
@@ -474,6 +489,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             display: none;
             z-index: 1001;
+            animation: slideIn 0.3s;
         }
 
         .connection-status {
@@ -504,7 +520,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
@@ -574,7 +590,27 @@
             display: block;
         }
 
-        /* CSS do Plano de Ação 5W2H (mantido igual) */
+        /* CSS do Plano de Ação 5W2H */
+        .w2h-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .w2h-actions-left {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .w2h-actions-right {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -589,6 +625,11 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             text-align: center;
             border-top: 3px solid #4f8af7;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
         }
 
         .stat-number {
@@ -657,17 +698,21 @@
             border-radius: 8px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             border-left: 4px solid #4f8af7;
-            transition: box-shadow 0.2s;
+            transition: all 0.3s;
         }
 
         .action-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
         }
 
         .action-item.alta { border-left-color: #ef4444; }
         .action-item.media { border-left-color: #f59e0b; }
         .action-item.baixa { border-left-color: #10b981; }
-        .action-item.realizado { border-left-color: #6b7280; }
+        .action-item.realizado { 
+            border-left-color: #10b981;
+            background-color: #f0fff4;
+        }
 
         .action-header {
             display: flex;
@@ -740,11 +785,6 @@
             gap: 0.5rem;
         }
 
-        .btn-sm {
-            padding: 0.5rem;
-            font-size: 0.8rem;
-        }
-
         .empty-state {
             text-align: center;
             padding: 3rem;
@@ -759,6 +799,122 @@
             margin-bottom: 1rem;
             color: #4f8af7;
             opacity: 0.5;
+        }
+
+        /* Modal 5W2H */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #374151;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #4f8af7;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        /* Gráficos */
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
 
         @media (max-width: 768px) {
@@ -787,15 +943,27 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .w2h-actions {
+                flex-direction: column;
+            }
+
+            .w2h-actions-left, .w2h-actions-right {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="connection-status" id="connection-status">Conectando...</div>
     <div class="save-indicator" id="save-indicator">Dados salvos com sucesso!</div>
-    <div class="loading" id="loading" style="display: none;">
+    <div class="loading" id="loading">
         <div class="loading-spinner"></div>
-        <div>Processando...</div>
+        <div>Carregando sistema...</div>
     </div>
     
     <div class="container">
@@ -851,11 +1019,11 @@
             <div class="tab-content active" id="epis-tab">
                 <div class="actions">
                     <button class="btn btn-primary" id="btn-adicionar-epi">
-                        ➕ Adicionar EPI
+                        <i class="fas fa-plus"></i> Adicionar EPI
                     </button>
                     <div class="search-box">
                         <input type="text" id="search-epi" placeholder="Buscar EPI...">
-                        <button onclick="filtrarEPIs()">🔍 Buscar</button>
+                        <button onclick="filtrarEPIs()"><i class="fas fa-search"></i> Buscar</button>
                     </div>
                 </div>
                 
@@ -883,14 +1051,14 @@
             <div class="tab-content" id="estoque-tab">
                 <div class="actions">
                     <button class="btn btn-primary" id="btn-adicionar-estoque">
-                        ➕ Adicionar ao Estoque
+                        <i class="fas fa-plus"></i> Adicionar ao Estoque
                     </button>
                     <button class="btn btn-info" id="btn-entrada-estoque">
-                        📥 Nova Entrada
+                        <i class="fas fa-box"></i> Nova Entrada
                     </button>
                     <div class="search-box">
                         <input type="text" id="search-estoque" placeholder="Buscar no estoque...">
-                        <button onclick="filtrarEstoque()">🔍 Buscar</button>
+                        <button onclick="filtrarEstoque()"><i class="fas fa-search"></i> Buscar</button>
                     </div>
                 </div>
                 
@@ -920,11 +1088,11 @@
             <div class="tab-content" id="entregas-tab">
                 <div class="actions">
                     <button class="btn btn-primary" id="btn-nova-entrega">
-                        ➕ Nova Entrega
+                        <i class="fas fa-plus"></i> Nova Entrega
                     </button>
                     <div class="search-box">
                         <input type="text" id="search-entregas" placeholder="Buscar entregas...">
-                        <button onclick="filtrarEntregas()">🔍 Buscar</button>
+                        <button onclick="filtrarEntregas()"><i class="fas fa-search"></i> Buscar</button>
                     </div>
                 </div>
                 
@@ -954,36 +1122,36 @@
             <div class="tab-content" id="relatorios-tab">
                 <div class="actions">
                     <button class="btn btn-primary" id="btn-relatorio-epis">
-                        📄 Relatório de EPIs
+                        <i class="fas fa-file-pdf"></i> Relatório de EPIs
                     </button>
                     <button class="btn btn-success" id="btn-relatorio-estoque">
-                        📄 Relatório de Estoque
+                        <i class="fas fa-file-pdf"></i> Relatório de Estoque
                     </button>
                     <button class="btn btn-warning" id="btn-relatorio-entregas">
-                        📄 Relatório de Entregas
+                        <i class="fas fa-file-pdf"></i> Relatório de Entregas
                     </button>
                     <button class="btn btn-danger" id="btn-backup">
-                        💾 Backup Completo
+                        <i class="fas fa-download"></i> Backup Completo
                     </button>
                 </div>
                 
                 <div class="dashboard" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     <div class="dashboard-card">
                         <h3>EPIs por Status</h3>
-                        <div id="chart-status" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <canvas id="statusChart" width="200" height="200"></canvas>
+                        <div class="chart-container">
+                            <canvas id="statusChart" width="400" height="300"></canvas>
                         </div>
                     </div>
                     <div class="dashboard-card">
                         <h3>Top 5 EPIs Mais Utilizados</h3>
-                        <div id="chart-top-epis" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <canvas id="topEpisChart" width="200" height="200"></canvas>
+                        <div class="chart-container">
+                            <canvas id="topEpisChart" width="400" height="300"></canvas>
                         </div>
                     </div>
                     <div class="dashboard-card">
                         <h3>Gastos por Categoria</h3>
-                        <div id="chart-gastos" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <canvas id="gastosChart" width="200" height="200"></canvas>
+                        <div class="chart-container">
+                            <canvas id="gastosChart" width="400" height="300"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1025,10 +1193,10 @@
                     
                     <div class="form-actions">
                         <button class="btn btn-danger" id="btn-cancelar-epi">
-                            ✖ Cancelar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                         <button class="btn btn-success" id="btn-salvar-epi">
-                            💾 Salvar EPI
+                            <i class="fas fa-save"></i> Salvar EPI
                         </button>
                     </div>
                 </div>
@@ -1067,10 +1235,10 @@
                     
                     <div class="form-actions">
                         <button class="btn btn-danger" id="btn-cancelar-estoque">
-                            ✖ Cancelar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                         <button class="btn btn-success" id="btn-salvar-estoque">
-                            💾 Salvar Estoque
+                            <i class="fas fa-save"></i> Salvar Estoque
                         </button>
                     </div>
                 </div>
@@ -1109,10 +1277,10 @@
                     
                     <div class="form-actions">
                         <button class="btn btn-danger" id="btn-cancelar-entrada">
-                            ✖ Cancelar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                         <button class="btn btn-success" id="btn-salvar-entrada">
-                            💾 Registrar Entrada
+                            <i class="fas fa-save"></i> Registrar Entrada
                         </button>
                     </div>
                 </div>
@@ -1163,10 +1331,10 @@
                     
                     <div class="form-actions">
                         <button class="btn btn-danger" id="btn-cancelar-entrega">
-                            ✖ Cancelar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                         <button class="btn btn-success" id="btn-salvar-entrega">
-                            💾 Registrar Entrega
+                            <i class="fas fa-save"></i> Registrar Entrega
                         </button>
                     </div>
                 </div>
@@ -1178,6 +1346,23 @@
             <div class="instructions">
                 <h4>Instruções de Uso - Plano de Ação 5W2H</h4>
                 <p>Utilize os filtros para encontrar ações específicas. Preencha todos os campos obrigatórios marcados com asterisco (*). <strong>Todos os dados são salvos automaticamente no Firebase!</strong></p>
+            </div>
+
+            <!-- Botões de Ação 5W2H -->
+            <div class="w2h-actions">
+                <div class="w2h-actions-left">
+                    <button class="btn btn-success" id="btn-new-action">
+                        <i class="fas fa-plus"></i> Novo Plano de Ação
+                    </button>
+                    <button class="btn btn-primary" id="btn-generate-pdf">
+                        <i class="fas fa-file-pdf"></i> Gerar PDF
+                    </button>
+                </div>
+                <div class="w2h-actions-right">
+                    <button class="btn btn-info" id="btn-refresh">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
             </div>
 
             <!-- Stats -->
@@ -1257,9 +1442,10 @@
 
             <!-- Actions List -->
             <div class="actions-list" id="actions-container">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i><br>
-                    <p>Carregando ações...</p>
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Nenhuma ação encontrada</h3>
+                    <p>Clique em "Novo Plano de Ação" para adicionar a primeira ação.</p>
                 </div>
             </div>
             
@@ -1293,7 +1479,7 @@
                                     <select class="form-select" id="form-area" required>
                                         <option value="">Selecione</option>
                                         <option value="SST">SST</option>
-                                        <option value="FINANCEIRO">FINanceiro</option>
+                                        <option value="FINANCEIRO">Financeiro</option>
                                         <option value="GERENCIA">Gerência</option>
                                         <option value="SST/FINANCEIRO">SST/Financeiro</option>
                                         <option value="E-SOCIAL">E-Social</option>
@@ -1345,26 +1531,26 @@
                                 <textarea class="form-textarea" id="form-how" rows="3" placeholder="Descreva como..."></textarea>
                             </div>
 
-                            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-                                <button type="button" class="btn btn-outline" id="btn-cancel">
-                                    Cancelar
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-danger" id="btn-cancel">
+                                    <i class="fas fa-times"></i> Cancelar
                                 </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Salvar
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Salvar Ação
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-
-            <!-- Toast -->
-            <div class="toast" id="toast"></div>
         </div>
     </div>
 
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        // Configuração do Firebase
+        // ========== CONFIGURAÇÃO DO FIREBASE ==========
         const firebaseConfig = {
             apiKey: "AIzaSyC7lfkugq0bnh0vfbkpu-ZSAvrlvUi-Uos",
             authDomain: "controleepi-6ccc3.firebaseapp.com",
@@ -1376,78 +1562,129 @@
             measurementId: "G-JX1EMWWFD6"
         };
 
-        // Inicialização do Firebase
+        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         // Inicialização do jsPDF
         const { jsPDF } = window.jspdf;
         
-        // ========== SISTEMA DE GESTÃO DE EPI ==========
-        // Variáveis globais EPI
+        // ========== VARIÁVEIS GLOBAIS ==========
         let epis = [];
         let estoque = [];
         let entregas = [];
+        let w2hActions = [];
         let editandoIndex = -1;
         let editandoTipo = '';
-        
-        // Elementos DOM EPI
+        let editingId = null;
+
+        // ========== ELEMENTOS DOM ==========
+        const connectionStatus = document.getElementById('connection-status');
+        const saveIndicator = document.getElementById('save-indicator');
+        const loading = document.getElementById('loading');
+
+        // Elementos EPI
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
-        const saveIndicator = document.getElementById('save-indicator');
-        const connectionStatus = document.getElementById('connection-status');
-        
-        // Modais EPI
         const modalEpi = document.getElementById('modal-epi');
         const modalEstoque = document.getElementById('modal-estoque');
         const modalEntradaEstoque = document.getElementById('modal-entrada-estoque');
         const modalEntrega = document.getElementById('modal-entrega');
-        
-        // ========== SISTEMA 5W2H ==========
-        // Global variables 5W2H
-        let allActions = [];
-        let filteredActions = [];
-        let editingId = null;
 
-        // ========== NAVEGAÇÃO ENTRE SISTEMAS ==========
+        // Elementos 5W2H
+        const actionModal = document.getElementById('action-modal');
+        const actionForm = document.getElementById('action-form');
+        const modalTitle = document.getElementById('modal-title');
+        const modalClose = document.getElementById('modal-close');
+        const btnCancel = document.getElementById('btn-cancel');
+        const btnNewAction = document.getElementById('btn-new-action');
+        const btnRefresh = document.getElementById('btn-refresh');
+        const btnGeneratePdf = document.getElementById('btn-generate-pdf');
+        const btnApplyFilters = document.getElementById('btn-apply-filters');
+        const btnClearFilters = document.getElementById('btn-clear-filters');
+        const toast = document.getElementById('toast');
+
+        // Elementos de estatísticas
+        const totalActions = document.getElementById('total-actions');
+        const inProgress = document.getElementById('in-progress');
+        const completed = document.getElementById('completed');
+        const overdue = document.getElementById('overdue');
+
+        // Filtros
+        const filterPriority = document.getElementById('filter-priority');
+        const filterResponsible = document.getElementById('filter-responsible');
+        const filterArea = document.getElementById('filter-area');
+        const filterStatus = document.getElementById('filter-status');
+        const searchInput = document.getElementById('search');
+
+        // Navegação entre sistemas
         const systemTabs = document.querySelectorAll('.system-tab');
         const systemContents = document.querySelectorAll('.system-content');
 
-        systemTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const systemId = tab.getAttribute('data-system');
+        // ========== INICIALIZAÇÃO DO SISTEMA ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSystem();
+        });
+
+        async function initializeSystem() {
+            showLoading();
+            
+            try {
+                // Configurar navegação entre sistemas
+                setupSystemNavigation();
                 
-                // Update active system tab
-                systemTabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+                // Configurar eventos do sistema EPI
+                setupEPIEventListeners();
                 
-                // Show corresponding system
-                systemContents.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.id === `${systemId}-system`) {
-                        content.classList.add('active');
+                // Configurar eventos do sistema 5W2H
+                setup5W2HEventListeners();
+                
+                // Carregar dados do Firebase
+                await loadAllData();
+                
+                // Inicializar gráficos
+                initializeCharts();
+                
+                hideLoading();
+                showToast('Sistema carregado com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao inicializar sistema:', error);
+                hideLoading();
+                showToast('Erro ao carregar sistema', true);
+            }
+        }
+
+        function setupSystemNavigation() {
+            systemTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const systemId = tab.getAttribute('data-system');
+                    
+                    // Update active system tab
+                    systemTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding system
+                    systemContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${systemId}-system`) {
+                            content.classList.add('active');
+                        }
+                    });
+
+                    // Se for a aba de relatórios, atualizar gráficos
+                    if (systemId === 'epi') {
+                        const activeTab = document.querySelector('.tab.active');
+                        if (activeTab && activeTab.getAttribute('data-tab') === 'relatorios') {
+                            updateCharts();
+                        }
                     }
                 });
             });
-        });
+        }
 
-        // ========== CÓDIGO DO SISTEMA DE GESTÃO DE EPI ==========
-        // Monitorar status da conexão
-        firebase.database().ref('.info/connected').on('value', function(snapshot) {
-            if (snapshot.val() === true) {
-                connectionStatus.textContent = '✅ Online';
-                connectionStatus.className = 'connection-status connection-online';
-            } else {
-                connectionStatus.textContent = '❌ Offline';
-                connectionStatus.className = 'connection-status connection-offline';
-            }
-        });
-
-        // Carregar dados do Firebase ao iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            carregarDadosFirebase();
-            loadActionsFromFirebase(); // Carregar dados do 5W2H
-            
+        // ========== SISTEMA DE GESTÃO DE EPI ==========
+        function setupEPIEventListeners() {
             // Event listeners para abas EPI
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -1490,279 +1727,45 @@
                 if (event.target === modalEntradaEstoque) fecharModalEntradaEstoque();
                 if (event.target === modalEntrega) fecharModalEntrega();
             });
-
-            // Iniciar atualização automática de status
-            setInterval(atualizarStatusAutomatico, 60000);
-        });
-        
-        // ========== FUNÇÕES DO SISTEMA EPI ==========
-        // Função para carregar dados do Firebase
-        function carregarDadosFirebase() {
-            console.log('Carregando dados do Firebase...');
-            
-            // Carregar EPIs
-            database.ref('epis').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                console.log('Dados de EPIs recebidos:', dados);
-                
-                if (dados) {
-                    epis = Object.keys(dados).map(key => ({
-                        id: key,
-                        ...dados[key]
-                    }));
-                    // Calcular status para cada EPI
-                    epis.forEach(epi => {
-                        epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
-                    });
-                } else {
-                    epis = [];
-                }
-                renderizarTabelaEPIs();
-                atualizarDashboard();
-            });
-
-            // Carregar Estoque
-            database.ref('estoque').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                console.log('Dados de Estoque recebidos:', dados);
-                
-                if (dados) {
-                    estoque = Object.keys(dados).map(key => ({
-                        id: key,
-                        ...dados[key]
-                    }));
-                    // Recalcular estoque atual para garantir consistência
-                    estoque.forEach(item => {
-                        recalcularEstoque(item.epiId);
-                    });
-                } else {
-                    estoque = [];
-                }
-                renderizarTabelaEstoque();
-                atualizarDashboard();
-            });
-
-            // Carregar Entregas
-            database.ref('entregas').on('value', (snapshot) => {
-                const dados = snapshot.val();
-                console.log('Dados de Entregas recebidos:', dados);
-                
-                if (dados) {
-                    entregas = Object.keys(dados).map(key => ({
-                        id: key,
-                        ...dados[key]
-                    }));
-                } else {
-                    entregas = [];
-                }
-                renderizarTabelaEntregas();
-                atualizarDashboard();
-            });
         }
 
-        // ... (Todas as outras funções do sistema EPI permanecem iguais)
-        // Função para recalcular estoque
-        function recalcularEstoque(epiId) {
-            const itemEstoque = estoque.find(item => item.epiId === epiId);
-            if (!itemEstoque) return;
-
-            // Recalcular saídas baseado nas entregas atuais
-            const saidasAtualizadas = entregas
-                .filter(entrega => entrega.epiId === epiId)
-                .reduce((total, entrega) => total + entrega.quantidade, 0);
-
-            // Recalcular estoque atual
-            const estoqueAtualAtualizado = itemEstoque.entradas - saidasAtualizadas;
-            
-            // Atualizar apenas se houver diferença
-            if (itemEstoque.saidas !== saidasAtualizadas || itemEstoque.estoqueAtual !== estoqueAtualAtualizado) {
-                itemEstoque.saidas = saidasAtualizadas;
-                itemEstoque.estoqueAtual = estoqueAtualAtualizado;
-                itemEstoque.status = calcularStatusEstoque(estoqueAtualAtualizado, itemEstoque.quantidadeMinima);
-                itemEstoque.gastoTotal = saidasAtualizadas * (itemEstoque.valorUnitario || 0);
-                itemEstoque.dataAtualizacao = new Date().toISOString();
-
-                // Salvar no Firebase
-                database.ref(`estoque/${itemEstoque.id}`).update({
-                    saidas: itemEstoque.saidas,
-                    estoqueAtual: itemEstoque.estoqueAtual,
-                    status: itemEstoque.status,
-                    gastoTotal: itemEstoque.gastoTotal,
-                    dataAtualizacao: itemEstoque.dataAtualizacao
-                });
-            }
-        }
-        
-        // Função para salvar dados no Firebase
-        async function salvarDadosFirebase(tipo, dados, id = null) {
+        async function loadAllData() {
             try {
-                if (id) {
-                    // Atualizar item existente
-                    await database.ref(`${tipo}/${id}`).set(dados);
-                    console.log(`Item ${id} atualizado em ${tipo}`);
-                } else {
-                    // Criar novo item
-                    const novoId = database.ref(tipo).push().key;
-                    dados.id = novoId;
-                    await database.ref(`${tipo}/${novoId}`).set(dados);
-                    console.log(`Novo item criado em ${tipo} com ID: ${novoId}`);
-                }
-                return true;
+                // Carregar EPIs
+                const episSnapshot = await database.ref('epis').once('value');
+                const episData = episSnapshot.val();
+                epis = episData ? Object.keys(episData).map(key => ({ id: key, ...episData[key] })) : [];
+                
+                // Carregar Estoque
+                const estoqueSnapshot = await database.ref('estoque').once('value');
+                const estoqueData = estoqueSnapshot.val();
+                estoque = estoqueData ? Object.keys(estoqueData).map(key => ({ id: key, ...estoqueData[key] })) : [];
+                
+                // Carregar Entregas
+                const entregasSnapshot = await database.ref('entregas').once('value');
+                const entregasData = entregasSnapshot.val();
+                entregas = entregasData ? Object.keys(entregasData).map(key => ({ id: key, ...entregasData[key] })) : [];
+                
+                // Carregar Ações 5W2H
+                const w2hSnapshot = await database.ref('5w2h').once('value');
+                const w2hData = w2hSnapshot.val();
+                w2hActions = w2hData ? Object.keys(w2hData).map(key => ({ id: key, ...w2hData[key] })) : [];
+                
+                // Atualizar interfaces
+                renderizarTabelasEPI();
+                atualizarDashboard();
+                renderActions5W2H();
+                updateStats5W2H();
+                updateFilterOptions5W2H();
+                
             } catch (error) {
-                console.error('Erro ao salvar no Firebase:', error);
-                mostrarMensagem('Erro ao salvar dados!', 'error');
-                return false;
+                console.error('Erro ao carregar dados:', error);
+                throw error;
             }
         }
 
-        // Função para excluir dados do Firebase
-        async function excluirDadosFirebase(tipo, id) {
-            try {
-                console.log(`Tentando excluir ${tipo}/${id}`);
-                await database.ref(`${tipo}/${id}`).remove();
-                console.log(`Item ${id} excluído com sucesso de ${tipo}`);
-                return true;
-            } catch (error) {
-                console.error('Erro ao excluir do Firebase:', error);
-                mostrarMensagem('Erro ao excluir item!', 'error');
-                return false;
-            }
-        }
-
-        // Função para mostrar loading
-        function mostrarLoading(mostrar) {
-            document.getElementById('loading').style.display = mostrar ? 'flex' : 'none';
-        }
-        
-        // Função para mostrar mensagem de salvamento
-        function mostrarMensagem(mensagem, tipo = 'success') {
-            saveIndicator.textContent = mensagem;
-            saveIndicator.style.backgroundColor = tipo === 'success' ? '#27ae60' : '#e74c3c';
-            saveIndicator.style.display = 'block';
-            setTimeout(() => {
-                saveIndicator.style.display = 'none';
-            }, 3000);
-        }
-        
-        // Função para abrir aba
-        function abrirTab(tabId) {
-            tabs.forEach(tab => tab.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
-            
-            if (tabId === 'relatorios') {
-                atualizarGraficos();
-            }
-        }
-        
-        // Função para calcular status do EPI - CORRIGIDA (problema de fuso horário)
-        function calcularStatusEPI(validadeCA, validadeEPI) {
-            if (!validadeCA && !validadeEPI) return "NÃO INFORMADO";
-            
-            const hoje = new Date();
-            // Usar apenas a data, ignorando horas para evitar problemas de fuso horário
-            const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-            
-            const umMes = new Date(hojeDate);
-            umMes.setDate(hojeDate.getDate() + 30);
-            
-            // Função auxiliar para converter string de data para Date sem problemas de fuso horário
-            function parseDateSafe(dateString) {
-                if (!dateString) return null;
-                const parts = dateString.split('-');
-                if (parts.length !== 3) return null;
-                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            }
-            
-            const dataCA = parseDateSafe(validadeCA);
-            const dataEPI = parseDateSafe(validadeEPI);
-            
-            // Verificar se algum está vencido
-            if ((dataCA && dataCA < hojeDate) || (dataEPI && dataEPI < hojeDate)) {
-                return "VENCEU";
-            }
-            
-            // Verificar se algum vence em menos de 30 dias
-            if ((dataCA && dataCA <= umMes) || (dataEPI && dataEPI <= umMes)) {
-                return "MENOS DE 1 MES";
-            }
-            
-            return "VALIDO";
-        }
-
-        // Função para validar datas - CORRIGIDA (problema de fuso horário)
-        function validarDatas(validadeCA, validadeEPI) {
-            // Usar a data atual sem horas para comparação
-            const hoje = new Date();
-            const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-            
-            // Função auxiliar para converter string de data para Date sem problemas de fuso horário
-            function parseDateSafe(dateString) {
-                if (!dateString) return null;
-                const parts = dateString.split('-');
-                if (parts.length !== 3) return null;
-                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            }
-            
-            const dataCA = parseDateSafe(validadeCA);
-            const dataEPI = parseDateSafe(validadeEPI);
-            
-            if (dataCA && dataCA < hojeDate) {
-                return "A validade do C.A. não pode ser uma data passada";
-            }
-            
-            if (dataEPI && dataEPI < hojeDate) {
-                return "A validade do EPI não pode ser uma data passada";
-            }
-            
-            return null;
-        }
-
-        // Função para formatar data no formato brasileiro - CORRIGIDA
-        function formatarData(dataString) {
-            if (!dataString) return '-';
-            
-            // Se já estiver no formato YYYY-MM-DD
-            if (dataString.includes('-')) {
-                const parts = dataString.split('-');
-                if (parts.length === 3) {
-                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                }
-            }
-            
-            // Se for um objeto Date ou string ISO
-            try {
-                const data = new Date(dataString);
-                if (!isNaN(data.getTime())) {
-                    return data.toLocaleDateString('pt-BR');
-                }
-            } catch (e) {
-                console.error('Erro ao formatar data:', e);
-            }
-            
-            return dataString; // Fallback
-        }
-        
-        // Função para atualizar status automaticamente
-        function atualizarStatusAutomatico() {
-            epis.forEach(epi => {
-                epi.status = calcularStatusEPI(epi.validadeCA, epi.validadeEPI);
-            });
-            renderizarTabelaEPIs();
-            atualizarDashboard();
-        }
-        
-        // Função para calcular status do estoque
-        function calcularStatusEstoque(estoqueAtual, quantidadeMinima) {
-            if (estoqueAtual < quantidadeMinima) {
-                return "ESTOQUE BAIXO";
-            }
-            return "ESTOQUE OK";
-        }
-        
-        // Função para abrir modal de EPI
+        // ... (Todas as funções do sistema EPI serão mantidas aqui)
+        // Funções para abrir/fechar modais EPI
         function abrirModalEpi(epiIndex = -1) {
             editandoIndex = epiIndex;
             editandoTipo = 'epi';
@@ -1770,7 +1773,6 @@
             const titulo = epiIndex === -1 ? "Adicionar Novo EPI" : "Editar EPI";
             document.getElementById('modal-epi-titulo').textContent = titulo;
             
-            // Limpar ou preencher formulário
             if (epiIndex === -1) {
                 document.getElementById('nome-epi').value = '';
                 document.getElementById('fabricante-epi').value = '';
@@ -1788,8 +1790,11 @@
             
             modalEpi.style.display = 'flex';
         }
-        
-        // Função para abrir modal de estoque
+
+        function fecharModalEpi() {
+            modalEpi.style.display = 'none';
+        }
+
         function abrirModalEstoque(estoqueIndex = -1) {
             editandoIndex = estoqueIndex;
             editandoTipo = 'estoque';
@@ -1808,7 +1813,6 @@
                 selectEpi.appendChild(option);
             });
             
-            // Limpar ou preencher formulário
             if (estoqueIndex === -1) {
                 document.getElementById('epi-estoque').value = '';
                 document.getElementById('entradas-estoque').value = '';
@@ -1825,9 +1829,11 @@
             modalEstoque.style.display = 'flex';
         }
 
-        // Função para abrir modal de entrada no estoque
+        function fecharModalEstoque() {
+            modalEstoque.style.display = 'none';
+        }
+
         function abrirModalEntradaEstoque() {
-            // Preencher select de EPIs
             const selectEpi = document.getElementById('epi-entrada');
             selectEpi.innerHTML = '<option value="">Selecione um EPI...</option>';
             
@@ -1838,15 +1844,17 @@
                 selectEpi.appendChild(option);
             });
             
-            // Limpar formulário
             document.getElementById('quantidade-entrada').value = '';
             document.getElementById('valor-unitario-entrada').value = '';
             document.getElementById('data-entrada').value = new Date().toISOString().split('T')[0];
             
             modalEntradaEstoque.style.display = 'flex';
         }
-        
-        // Função para abrir modal de entrega
+
+        function fecharModalEntradaEstoque() {
+            modalEntradaEstoque.style.display = 'none';
+        }
+
         function abrirModalEntrega(entregaIndex = -1) {
             editandoIndex = entregaIndex;
             editandoTipo = 'entrega';
@@ -1854,7 +1862,6 @@
             const titulo = entregaIndex === -1 ? "Nova Entrega de EPI" : "Editar Entrega";
             document.getElementById('modal-entrega-titulo').textContent = titulo;
             
-            // Preencher select de EPIs
             const selectEpi = document.getElementById('epi-entrega');
             selectEpi.innerHTML = '<option value="">Selecione um EPI...</option>';
             
@@ -1865,7 +1872,6 @@
                 selectEpi.appendChild(option);
             });
             
-            // Limpar ou preencher formulário
             if (entregaIndex === -1) {
                 document.getElementById('data-entrega').value = new Date().toISOString().split('T')[0];
                 document.getElementById('funcionario-entrega').value = '';
@@ -1885,25 +1891,12 @@
             
             modalEntrega.style.display = 'flex';
         }
-        
-        // Funções para fechar modais
-        function fecharModalEpi() {
-            modalEpi.style.display = 'none';
-        }
-        
-        function fecharModalEstoque() {
-            modalEstoque.style.display = 'none';
-        }
 
-        function fecharModalEntradaEstoque() {
-            modalEntradaEstoque.style.display = 'none';
-        }
-        
         function fecharModalEntrega() {
             modalEntrega.style.display = 'none';
         }
-        
-        // Função para salvar EPI - CORRIGIDA (problema de fuso horário)
+
+        // Funções para salvar dados EPI
         async function salvarEpi() {
             const nome = document.getElementById('nome-epi').value;
             const validadeCA = document.getElementById('validade-ca').value;
@@ -1914,43 +1907,36 @@
                 return;
             }
             
-            // Validar datas
-            const erroData = validarDatas(validadeCA, validadeEPI);
-            if (erroData) {
-                alert(erroData);
-                return;
-            }
+            showLoading();
             
-            mostrarLoading(true);
-            
-            // As datas já estão no formato YYYY-MM-DD do input date
-            // Não precisamos converter, vamos usar diretamente
             const epi = {
                 nome: nome,
                 fabricante: document.getElementById('fabricante-epi').value,
                 ca: document.getElementById('ca-epi').value,
-                validadeCA: validadeCA, // Já está no formato correto
-                validadeEPI: validadeEPI, // Já está no formato correto
+                validadeCA: validadeCA,
+                validadeEPI: validadeEPI,
                 status: calcularStatusEPI(validadeCA, validadeEPI),
                 dataAtualizacao: new Date().toISOString()
             };
             
-            let epiId = null;
-            if (editandoIndex !== -1) {
-                epiId = epis[editandoIndex].id;
-            }
-            
-            const sucesso = await salvarDadosFirebase('epis', epi, epiId);
-            
-            mostrarLoading(false);
-            
-            if (sucesso) {
+            try {
+                if (editandoIndex !== -1) {
+                    await database.ref(`epis/${epis[editandoIndex].id}`).update(epi);
+                } else {
+                    await database.ref('epis').push(epi);
+                }
+                
                 fecharModalEpi();
-                mostrarMensagem('EPI salvo com sucesso!');
+                showToast('EPI salvo com sucesso!');
+                await loadAllData();
+                
+            } catch (error) {
+                showToast('Erro ao salvar EPI', true);
+            } finally {
+                hideLoading();
             }
         }
-        
-        // Função para salvar estoque
+
         async function salvarEstoque() {
             const epiId = document.getElementById('epi-estoque').value;
             const entradas = parseInt(document.getElementById('entradas-estoque').value);
@@ -1967,9 +1953,8 @@
                 return;
             }
             
-            mostrarLoading(true);
+            showLoading();
             
-            // Calcular saídas (soma das quantidades entregues para este EPI)
             const saidas = entregas
                 .filter(e => e.epiId === epiId)
                 .reduce((total, entrega) => total + entrega.quantidade, 0);
@@ -1992,22 +1977,24 @@
                 dataAtualizacao: new Date().toISOString()
             };
             
-            let estoqueId = null;
-            if (editandoIndex !== -1) {
-                estoqueId = estoque[editandoIndex].id;
-            }
-            
-            const sucesso = await salvarDadosFirebase('estoque', itemEstoque, estoqueId);
-            
-            mostrarLoading(false);
-            
-            if (sucesso) {
+            try {
+                if (editandoIndex !== -1) {
+                    await database.ref(`estoque/${estoque[editandoIndex].id}`).update(itemEstoque);
+                } else {
+                    await database.ref('estoque').push(itemEstoque);
+                }
+                
                 fecharModalEstoque();
-                mostrarMensagem('Estoque atualizado com sucesso!');
+                showToast('Estoque atualizado com sucesso!');
+                await loadAllData();
+                
+            } catch (error) {
+                showToast('Erro ao salvar estoque', true);
+            } finally {
+                hideLoading();
             }
         }
 
-        // Função para salvar entrada no estoque
         async function salvarEntradaEstoque() {
             const epiId = document.getElementById('epi-entrada').value;
             const quantidade = parseInt(document.getElementById('quantidade-entrada').value);
@@ -2024,17 +2011,14 @@
                 return;
             }
             
-            mostrarLoading(true);
+            showLoading();
             
-            // Verificar se já existe item no estoque
             let itemEstoque = estoque.find(item => item.epiId === epiId);
             
             if (itemEstoque) {
-                // Atualizar estoque existente
                 const novasEntradas = itemEstoque.entradas + quantidade;
                 const estoqueAtual = novasEntradas - itemEstoque.saidas;
                 
-                // Atualizar valor unitário se fornecido
                 if (novoValorUnitario && !isNaN(parseFloat(novoValorUnitario))) {
                     itemEstoque.valorUnitario = parseFloat(novoValorUnitario);
                 }
@@ -2045,22 +2029,23 @@
                 itemEstoque.gastoTotal = itemEstoque.saidas * (itemEstoque.valorUnitario || 0);
                 itemEstoque.dataAtualizacao = new Date().toISOString();
                 
-                const sucesso = await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
-                
-                mostrarLoading(false);
-                
-                if (sucesso) {
+                try {
+                    await database.ref(`estoque/${itemEstoque.id}`).update(itemEstoque);
                     fecharModalEntradaEstoque();
-                    mostrarMensagem(`Entrada de ${quantidade} unidades registrada com sucesso!`);
+                    showToast(`Entrada de ${quantidade} unidades registrada com sucesso!`);
+                    await loadAllData();
+                    
+                } catch (error) {
+                    showToast('Erro ao registrar entrada', true);
+                } finally {
+                    hideLoading();
                 }
             } else {
-                // Criar novo item no estoque
+                hideLoading();
                 alert('Este EPI não está cadastrado no estoque. Use "Adicionar ao Estoque" primeiro.');
-                mostrarLoading(false);
             }
         }
-        
-        // Função para salvar entrega
+
         async function salvarEntrega() {
             const data = document.getElementById('data-entrega').value;
             const funcionario = document.getElementById('funcionario-entrega').value;
@@ -2078,7 +2063,6 @@
                 return;
             }
             
-            // Verificar se há estoque suficiente
             const itemEstoque = estoque.find(e => e.epiId === epiId);
             if (!itemEstoque) {
                 alert('Este EPI não está cadastrado no estoque.');
@@ -2090,7 +2074,7 @@
                 return;
             }
             
-            mostrarLoading(true);
+            showLoading();
             
             const valorUnitario = itemEstoque.valorUnitario || 0;
             const valorTotal = quantidade * valorUnitario;
@@ -2108,14 +2092,13 @@
                 dataRegistro: new Date().toISOString()
             };
             
-            let entregaId = null;
-            if (editandoIndex !== -1) {
-                entregaId = entregas[editandoIndex].id;
-            }
-            
-            const sucesso = await salvarDadosFirebase('entregas', entrega, entregaId);
-            
-            if (sucesso) {
+            try {
+                if (editandoIndex !== -1) {
+                    await database.ref(`entregas/${entregas[editandoIndex].id}`).update(entrega);
+                } else {
+                    await database.ref('entregas').push(entrega);
+                }
+                
                 // Atualizar estoque
                 itemEstoque.saidas += quantidade;
                 itemEstoque.estoqueAtual = itemEstoque.entradas - itemEstoque.saidas;
@@ -2123,115 +2106,93 @@
                 itemEstoque.gastoTotal = itemEstoque.saidas * itemEstoque.valorUnitario;
                 itemEstoque.dataAtualizacao = new Date().toISOString();
                 
-                await salvarDadosFirebase('estoque', itemEstoque, itemEstoque.id);
+                await database.ref(`estoque/${itemEstoque.id}`).update(itemEstoque);
                 
-                mostrarLoading(false);
                 fecharModalEntrega();
-                mostrarMensagem('Entrega registrada com sucesso!');
-            } else {
-                mostrarLoading(false);
-            }
-        }
-        
-        // Função para excluir item
-        async function excluirItem(tipo, index) {
-            console.log(`Tentando excluir ${tipo} no índice ${index}`);
-            
-            if (!confirm('Tem certeza que deseja excluir este item?')) {
-                return;
-            }
-            
-            mostrarLoading(true);
-            
-            try {
-                let id;
-                
-                // Encontrar o ID correto baseado no tipo
-                if (tipo === 'epi') {
-                    if (index < 0 || index >= epis.length) {
-                        throw new Error('Índice de EPI inválido');
-                    }
-                    id = epis[index].id;
-                    console.log(`Excluindo EPI: ${epis[index].nome} (ID: ${id})`);
-                    
-                    await database.ref(`epis/${id}`).remove();
-                    
-                    // Também excluir estoque e entregas relacionados
-                    const estoqueRelacionado = estoque.find(item => item.epiId === id);
-                    if (estoqueRelacionado) {
-                        await database.ref(`estoque/${estoqueRelacionado.id}`).remove();
-                        console.log(`Estoque relacionado excluído: ${estoqueRelacionado.id}`);
-                    }
-                    
-                    const entregasRelacionadas = entregas.filter(item => item.epiId === id);
-                    for (const entrega of entregasRelacionadas) {
-                        await database.ref(`entregas/${entrega.id}`).remove();
-                        console.log(`Entrega relacionada excluída: ${entrega.id}`);
-                    }
-                    
-                } else if (tipo === 'estoque') {
-                    if (index < 0 || index >= estoque.length) {
-                        throw new Error('Índice de estoque inválido');
-                    }
-                    id = estoque[index].id;
-                    console.log(`Excluindo estoque: ${estoque[index].epiNome} (ID: ${id})`);
-                    await database.ref(`estoque/${id}`).remove();
-                    
-                } else if (tipo === 'entrega') {
-                    if (index < 0 || index >= entregas.length) {
-                        throw new Error('Índice de entrega inválido');
-                    }
-                    id = entregas[index].id;
-                    const entrega = entregas[index];
-                    console.log(`Excluindo entrega: ${entrega.epiNome} (ID: ${id})`);
-                    
-                    await database.ref(`entregas/${id}`).remove();
-                    
-                    // Atualizar estoque após excluir entrega
-                    const itemEstoque = estoque.find(item => item.epiId === entrega.epiId);
-                    if (itemEstoque) {
-                        // Recalcular saídas baseado nas entregas restantes
-                        const saidasAtualizadas = entregas
-                            .filter(e => e.epiId === entrega.epiId && e.id !== id)
-                            .reduce((total, e) => total + e.quantidade, 0);
-                            
-                        itemEstoque.saidas = saidasAtualizadas;
-                        itemEstoque.estoqueAtual = itemEstoque.entradas - saidasAtualizadas;
-                        itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
-                        itemEstoque.gastoTotal = saidasAtualizadas * (itemEstoque.valorUnitario || 0);
-                        itemEstoque.dataAtualizacao = new Date().toISOString();
-                        
-                        await database.ref(`estoque/${itemEstoque.id}`).update({
-                            saidas: itemEstoque.saidas,
-                            estoqueAtual: itemEstoque.estoqueAtual,
-                            status: itemEstoque.status,
-                            gastoTotal: itemEstoque.gastoTotal,
-                            dataAtualizacao: itemEstoque.dataAtualizacao
-                        });
-                    }
-                } else {
-                    throw new Error('Tipo inválido para exclusão');
-                }
-                
-                console.log(`Item ${id} excluído com sucesso do ${tipo}`);
-                mostrarMensagem('Item excluído com sucesso!');
+                showToast('Entrega registrada com sucesso!');
+                await loadAllData();
                 
             } catch (error) {
-                console.error('Erro detalhado na exclusão:', error);
-                mostrarMensagem(`Erro ao excluir item: ${error.message}`, 'error');
+                showToast('Erro ao registrar entrega', true);
             } finally {
-                mostrarLoading(false);
+                hideLoading();
             }
         }
-        
-        // Função para renderizar todas as tabelas
-        function renderizarTabelas() {
+
+        // Funções auxiliares EPI
+        function calcularStatusEPI(validadeCA, validadeEPI) {
+            if (!validadeCA && !validadeEPI) return "NÃO INFORMADO";
+            
+            const hoje = new Date();
+            const hojeDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+            const umMes = new Date(hojeDate);
+            umMes.setDate(hojeDate.getDate() + 30);
+            
+            function parseDateSafe(dateString) {
+                if (!dateString) return null;
+                const parts = dateString.split('-');
+                if (parts.length !== 3) return null;
+                return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+            
+            const dataCA = parseDateSafe(validadeCA);
+            const dataEPI = parseDateSafe(validadeEPI);
+            
+            if ((dataCA && dataCA < hojeDate) || (dataEPI && dataEPI < hojeDate)) {
+                return "VENCEU";
+            }
+            
+            if ((dataCA && dataCA <= umMes) || (dataEPI && dataEPI <= umMes)) {
+                return "MENOS DE 1 MES";
+            }
+            
+            return "VALIDO";
+        }
+
+        function calcularStatusEstoque(estoqueAtual, quantidadeMinima) {
+            if (estoqueAtual < quantidadeMinima) {
+                return "ESTOQUE BAIXO";
+            }
+            return "ESTOQUE OK";
+        }
+
+        function formatarData(dataString) {
+            if (!dataString) return '-';
+            if (dataString.includes('-')) {
+                const parts = dataString.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            }
+            try {
+                const data = new Date(dataString);
+                if (!isNaN(data.getTime())) {
+                    return data.toLocaleDateString('pt-BR');
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e);
+            }
+            return dataString;
+        }
+
+        function abrirTab(tabId) {
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            if (tabId === 'relatorios') {
+                updateCharts();
+            }
+        }
+
+        function renderizarTabelasEPI() {
             renderizarTabelaEPIs();
             renderizarTabelaEstoque();
             renderizarTabelaEntregas();
         }
-        
-        // Função para renderizar tabela de EPIs
+
         function renderizarTabelaEPIs() {
             const tbody = document.querySelector('#tabela-epis tbody');
             tbody.innerHTML = '';
@@ -2246,7 +2207,6 @@
             epis.forEach((epi, index) => {
                 const tr = document.createElement('tr');
                 
-                // Determinar classe do status
                 let statusClass = '';
                 if (epi.status === 'VALIDO') statusClass = 'status-valid';
                 else if (epi.status === 'MENOS DE 1 MES') statusClass = 'status-warning';
@@ -2261,16 +2221,15 @@
                     <td>${epi.validadeEPI ? formatarData(epi.validadeEPI) : '-'}</td>
                     <td><span class="status-badge ${statusClass}">${epi.status}</span></td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="abrirModalEpi(${index})">Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirItem('epi', ${index})">Excluir</button>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalEpi(${index})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirItemEPI(${index})"><i class="fas fa-trash"></i> Excluir</button>
                     </td>
                 `;
                 
                 tbody.appendChild(tr);
             });
         }
-        
-        // Função para renderizar tabela de estoque
+
         function renderizarTabelaEstoque() {
             const tbody = document.querySelector('#tabela-estoque tbody');
             tbody.innerHTML = '';
@@ -2284,8 +2243,6 @@
             
             estoque.forEach((item, index) => {
                 const tr = document.createElement('tr');
-                
-                // Determinar classe do status
                 const statusClass = item.status === 'ESTOQUE OK' ? 'status-ok' : 'status-low-stock';
                 
                 tr.innerHTML = `
@@ -2298,16 +2255,15 @@
                     <td>${item.valorUnitario ? 'R$ ' + item.valorUnitario.toFixed(2) : '-'}</td>
                     <td>${item.gastoTotal ? 'R$ ' + item.gastoTotal.toFixed(2) : '-'}</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="abrirModalEstoque(${index})">Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirItem('estoque', ${index})">Excluir</button>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalEstoque(${index})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirItemEstoque(${index})"><i class="fas fa-trash"></i> Excluir</button>
                     </td>
                 `;
                 
                 tbody.appendChild(tr);
             });
         }
-        
-        // Função para renderizar tabela de entregas
+
         function renderizarTabelaEntregas() {
             const tbody = document.querySelector('#tabela-entregas tbody');
             tbody.innerHTML = '';
@@ -2319,7 +2275,6 @@
                 return;
             }
             
-            // Ordenar entregas por data (mais recente primeiro)
             const entregasOrdenadas = [...entregas].sort((a, b) => new Date(b.data) - new Date(a.data));
             
             entregasOrdenadas.forEach((entrega, index) => {
@@ -2336,16 +2291,96 @@
                     <td>${entrega.valorUnitario ? 'R$ ' + entrega.valorUnitario.toFixed(2) : '-'}</td>
                     <td>${entrega.valorTotal ? 'R$ ' + entrega.valorTotal.toFixed(2) : '-'}</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="abrirModalEntrega(${originalIndex})">Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirItem('entrega', ${originalIndex})">Excluir</button>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalEntrega(${originalIndex})"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirItemEntrega(${originalIndex})"><i class="fas fa-trash"></i> Excluir</button>
                     </td>
                 `;
                 
                 tbody.appendChild(tr);
             });
         }
-        
-        // Funções de filtro
+
+        async function excluirItemEPI(index) {
+            if (!confirm('Tem certeza que deseja excluir este EPI?')) return;
+            
+            showLoading();
+            try {
+                await database.ref(`epis/${epis[index].id}`).remove();
+                
+                // Excluir estoque e entregas relacionados
+                const estoqueRelacionado = estoque.find(item => item.epiId === epis[index].id);
+                if (estoqueRelacionado) {
+                    await database.ref(`estoque/${estoqueRelacionado.id}`).remove();
+                }
+                
+                const entregasRelacionadas = entregas.filter(item => item.epiId === epis[index].id);
+                for (const entrega of entregasRelacionadas) {
+                    await database.ref(`entregas/${entrega.id}`).remove();
+                }
+                
+                showToast('EPI excluído com sucesso!');
+                await loadAllData();
+            } catch (error) {
+                showToast('Erro ao excluir EPI', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function excluirItemEstoque(index) {
+            if (!confirm('Tem certeza que deseja excluir este item do estoque?')) return;
+            
+            showLoading();
+            try {
+                await database.ref(`estoque/${estoque[index].id}`).remove();
+                showToast('Item do estoque excluído com sucesso!');
+                await loadAllData();
+            } catch (error) {
+                showToast('Erro ao excluir item do estoque', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function excluirItemEntrega(index) {
+            if (!confirm('Tem certeza que deseja excluir esta entrega?')) return;
+            
+            showLoading();
+            try {
+                const entrega = entregas[index];
+                await database.ref(`entregas/${entrega.id}`).remove();
+                
+                // Atualizar estoque
+                const itemEstoque = estoque.find(item => item.epiId === entrega.epiId);
+                if (itemEstoque) {
+                    const saidasAtualizadas = entregas
+                        .filter(e => e.epiId === entrega.epiId && e.id !== entrega.id)
+                        .reduce((total, e) => total + e.quantidade, 0);
+                        
+                    itemEstoque.saidas = saidasAtualizadas;
+                    itemEstoque.estoqueAtual = itemEstoque.entradas - saidasAtualizadas;
+                    itemEstoque.status = calcularStatusEstoque(itemEstoque.estoqueAtual, itemEstoque.quantidadeMinima);
+                    itemEstoque.gastoTotal = saidasAtualizadas * (itemEstoque.valorUnitario || 0);
+                    itemEstoque.dataAtualizacao = new Date().toISOString();
+                    
+                    await database.ref(`estoque/${itemEstoque.id}`).update({
+                        saidas: itemEstoque.saidas,
+                        estoqueAtual: itemEstoque.estoqueAtual,
+                        status: itemEstoque.status,
+                        gastoTotal: itemEstoque.gastoTotal,
+                        dataAtualizacao: itemEstoque.dataAtualizacao
+                    });
+                }
+                
+                showToast('Entrega excluída com sucesso!');
+                await loadAllData();
+            } catch (error) {
+                showToast('Erro ao excluir entrega', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
         function filtrarEPIs() {
             const termo = document.getElementById('search-epi').value.toLowerCase();
             const linhas = document.querySelectorAll('#tabela-epis tbody tr');
@@ -2355,7 +2390,7 @@
                 linha.style.display = texto.includes(termo) ? '' : 'none';
             });
         }
-        
+
         function filtrarEstoque() {
             const termo = document.getElementById('search-estoque').value.toLowerCase();
             const linhas = document.querySelectorAll('#tabela-estoque tbody tr');
@@ -2365,7 +2400,7 @@
                 linha.style.display = texto.includes(termo) ? '' : 'none';
             });
         }
-        
+
         function filtrarEntregas() {
             const termo = document.getElementById('search-entregas').value.toLowerCase();
             const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
@@ -2375,39 +2410,24 @@
                 linha.style.display = texto.includes(termo) ? '' : 'none';
             });
         }
-        
-        // Função para atualizar dashboard
+
         function atualizarDashboard() {
-            // Total de EPIs
             document.getElementById('total-epis').textContent = epis.length;
             
-            // EPIs vencidos
             const episVencidos = epis.filter(epi => epi.status === 'VENCEU').length;
             document.getElementById('epis-vencidos').textContent = episVencidos;
             
-            // EPIs próximos do vencimento
             const episProximoVencimento = epis.filter(epi => epi.status === 'MENOS DE 1 MES').length;
             document.getElementById('epis-proximo-vencimento').textContent = episProximoVencimento;
             
-            // Estoques baixos
             const estoquesBaixos = estoque.filter(item => item.status === 'ESTOQUE BAIXO').length;
             document.getElementById('estoques-baixos').textContent = estoquesBaixos;
         }
-        
-        // Função para atualizar gráficos
-        function atualizarGraficos() {
-            // Esta função seria implementada com uma biblioteca de gráficos como Chart.js
-            // Por simplicidade, vamos apenas mostrar placeholders
-            document.getElementById('chart-status').innerHTML = '<p style="text-align: center;">Gráfico de Status dos EPIs</p>';
-            document.getElementById('chart-top-epis').innerHTML = '<p style="text-align: center;">Gráfico dos EPIs Mais Utilizados</p>';
-            document.getElementById('chart-gastos').innerHTML = '<p style="text-align: center;">Gráfico de Gastos por Categoria</p>';
-        }
-        
-        // Funções para gerar relatórios PDF
+
+        // Funções de relatório EPI
         function gerarRelatorioEPIs() {
             const doc = new jsPDF();
             
-            // Cabeçalho
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
             doc.text("Relatório de EPIs", 105, 15, { align: 'center' });
@@ -2416,7 +2436,6 @@
             doc.setFont(undefined, 'normal');
             doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
             
-            // Tabela
             const tableColumn = ["EPI", "Fabricante", "C.A", "Validade C.A", "Validade EPI", "Status"];
             const tableRows = [];
             
@@ -2442,13 +2461,12 @@
             });
             
             doc.save(`Relatorio_EPIs_${new Date().toISOString().split('T')[0]}.pdf`);
-            mostrarMensagem('Relatório de EPIs gerado com sucesso!');
+            showToast('Relatório de EPIs gerado com sucesso!');
         }
-        
+
         function gerarRelatorioEstoque() {
             const doc = new jsPDF();
             
-            // Cabeçalho
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
             doc.text("Relatório de Estoque", 105, 15, { align: 'center' });
@@ -2457,7 +2475,6 @@
             doc.setFont(undefined, 'normal');
             doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
             
-            // Tabela
             const tableColumn = ["EPI", "Entradas", "Saídas", "Estoque Atual", "Qtd. Mínima", "Status"];
             const tableRows = [];
             
@@ -2483,13 +2500,12 @@
             });
             
             doc.save(`Relatorio_Estoque_${new Date().toISOString().split('T')[0]}.pdf`);
-            mostrarMensagem('Relatório de Estoque gerado com sucesso!');
+            showToast('Relatório de Estoque gerado com sucesso!');
         }
-        
+
         function gerarRelatorioEntregas() {
             const doc = new jsPDF();
             
-            // Cabeçalho
             doc.setFontSize(16);
             doc.setFont(undefined, 'bold');
             doc.text("Relatório de Entregas", 105, 15, { align: 'center' });
@@ -2498,7 +2514,6 @@
             doc.setFont(undefined, 'normal');
             doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
             
-            // Tabela
             const tableColumn = ["Data", "Funcionário", "Cargo", "Setor", "EPI", "Qtd.", "Valor Total"];
             const tableRows = [];
             
@@ -2525,15 +2540,15 @@
             });
             
             doc.save(`Relatorio_Entregas_${new Date().toISOString().split('T')[0]}.pdf`);
-            mostrarMensagem('Relatório de Entregas gerado com sucesso!');
+            showToast('Relatório de Entregas gerado com sucesso!');
         }
-        
-        // Função para fazer backup completo
+
         function fazerBackup() {
             const dados = {
                 epis: epis,
                 estoque: estoque,
                 entregas: entregas,
+                w2h: w2hActions,
                 dataBackup: new Date().toISOString()
             };
             
@@ -2541,279 +2556,157 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `backup_epi_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `backup_sistema_jsl_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            mostrarMensagem('Backup realizado com sucesso!');
+            showToast('Backup realizado com sucesso!');
         }
 
-        // ========== CÓDIGO DO SISTEMA 5W2H ==========
-        // Utility functions 5W2H
-        function formatarData5W2H(dataString) {
-            if (!dataString) return "Não definido";
-            const data = new Date(dataString + 'T00:00:00');
-            return data.toLocaleDateString('pt-BR');
-        }
+        // Gráficos
+        let statusChart, topEpisChart, gastosChart;
 
-        function calcularStatus5W2H(acao) {
-            if (acao.status === "Realizado" || acao.priorizacao === "Realizado") return "concluido";
-            if (acao.fimReal) return "concluido";
-            
-            const hoje = new Date();
-            const fimPlanejado = acao.fimPlanejado ? new Date(acao.fimPlanejado + 'T00:00:00') : null;
-            
-            if (fimPlanejado && fimPlanejado < hoje) return "atrasado";
-            if (acao.inicio) return "em-andamento";
-            
-            return "em-andamento";
-        }
+        function initializeCharts() {
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const topEpisCtx = document.getElementById('topEpisChart').getContext('2d');
+            const gastosCtx = document.getElementById('gastosChart').getContext('2d');
 
-        function showToast5W2H(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type} show`;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        function openModal5W2H() {
-            document.getElementById('action-modal').style.display = 'flex';
-        }
-
-        function closeModal5W2H() {
-            document.getElementById('action-modal').style.display = 'none';
-            editingId = null;
-            document.getElementById('action-form').reset();
-            document.getElementById('modal-title').textContent = 'Nova Ação';
-        }
-
-        // Firebase functions 5W2H
-        function loadActionsFromFirebase() {
-            const actionsContainer = document.getElementById('actions-container');
-            actionsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><br><p>Carregando ações...</p></div>';
-            
-            const actionsRef = database.ref('5w2h/actions');
-            
-            actionsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                allActions = [];
-                
-                if (data) {
-                    Object.keys(data).forEach(key => {
-                        allActions.push({
-                            id: key,
-                            ...data[key]
-                        });
-                    });
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Válidos', 'Próximo do Vencimento', 'Vencidos'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
                 }
-                
-                filteredActions = [...allActions];
-                renderizarAcoes5W2H(filteredActions);
-                updateFilters5W2H();
-                showToast5W2H('Dados carregados', 'success');
             });
+
+            topEpisChart = new Chart(topEpisCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Quantidade Entregue',
+                        data: [],
+                        backgroundColor: '#007bff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            gastosChart = new Chart(gastosCtx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            updateCharts();
         }
 
-        function saveActionToFirebase(actionData) {
-            const actionsRef = database.ref('5w2h/actions');
+        function updateCharts() {
+            if (!statusChart || !topEpisChart || !gastosChart) return;
+
+            // Atualizar gráfico de status
+            const validos = epis.filter(epi => epi.status === 'VALIDO').length;
+            const proximos = epis.filter(epi => epi.status === 'MENOS DE 1 MES').length;
+            const vencidos = epis.filter(epi => epi.status === 'VENCEU').length;
             
-            // Calcular data fim planejada
-            if (actionData.inicio && actionData.prazo) {
-                const inicio = new Date(actionData.inicio + 'T00:00:00');
-                inicio.setDate(inicio.getDate() + parseInt(actionData.prazo));
-                actionData.fimPlanejado = inicio.toISOString().split('T')[0];
-            }
+            statusChart.data.datasets[0].data = [validos, proximos, vencidos];
+            statusChart.update();
 
-            actionData.updatedAt = new Date().toISOString();
+            // Atualizar gráfico dos EPIs mais utilizados
+            const epiUsage = {};
+            entregas.forEach(entrega => {
+                if (!epiUsage[entrega.epiNome]) {
+                    epiUsage[entrega.epiNome] = 0;
+                }
+                epiUsage[entrega.epiNome] += entrega.quantidade;
+            });
 
-            if (editingId) {
-                actionsRef.child(editingId).update(actionData)
-                    .then(() => {
-                        showToast5W2H('Ação atualizada', 'success');
-                        closeModal5W2H();
-                    })
-                    .catch((error) => {
-                        showToast5W2H('Erro ao atualizar', 'error');
-                    });
-            } else {
-                actionsRef.push(actionData)
-                    .then(() => {
-                        showToast5W2H('Ação criada', 'success');
-                        closeModal5W2H();
-                    })
-                    .catch((error) => {
-                        showToast5W2H('Erro ao criar', 'error');
-                    });
-            }
+            const sortedEpis = Object.entries(epiUsage)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+
+            topEpisChart.data.labels = sortedEpis.map(([nome]) => nome);
+            topEpisChart.data.datasets[0].data = sortedEpis.map(([,quantidade]) => quantidade);
+            topEpisChart.update();
+
+            // Atualizar gráfico de gastos
+            const gastosPorEPI = {};
+            entregas.forEach(entrega => {
+                if (!gastosPorEPI[entrega.epiNome]) {
+                    gastosPorEPI[entrega.epiNome] = 0;
+                }
+                gastosPorEPI[entrega.epiNome] += entrega.valorTotal || 0;
+            });
+
+            const sortedGastos = Object.entries(gastosPorEPI)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+
+            gastosChart.data.labels = sortedGastos.map(([nome]) => nome);
+            gastosChart.data.datasets[0].data = sortedGastos.map(([,gasto]) => gasto);
+            gastosChart.update();
         }
 
-        function deleteActionFromFirebase(actionId) {
-            if (confirm('Excluir esta ação?')) {
-                const actionRef = database.ref(`5w2h/actions/${actionId}`);
-                actionRef.remove()
-                    .then(() => {
-                        showToast5W2H('Ação excluída', 'success');
-                    })
-                    .catch((error) => {
-                        showToast5W2H('Erro ao excluir', 'error');
-                    });
-            }
-        }
-
-        // Render functions 5W2H
-        function renderizarAcoes5W2H(acoes) {
-            const container = document.getElementById('actions-container');
+        // ========== SISTEMA 5W2H ==========
+        function setup5W2HEventListeners() {
+            btnNewAction.addEventListener('click', () => openModal5W2H());
+            modalClose.addEventListener('click', () => closeModal5W2H());
+            btnCancel.addEventListener('click', () => closeModal5W2H());
             
-            if (acoes.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>Nenhuma ação encontrada</h3>
-                        <p>Ajuste os filtros ou adicione uma nova ação.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = '';
-
-            acoes.forEach(acao => {
-                const statusClass = calcularStatus5W2H(acao);
-                const actionItem = document.createElement('div');
-                actionItem.className = `action-item ${acao.priorizacao.toLowerCase()}`;
-                
-                actionItem.innerHTML = `
-                    <div class="action-header">
-                        <div class="action-title">${acao.what}</div>
-                        <div class="action-meta">
-                            <span class="badge badge-priority">${acao.priorizacao}</span>
-                            <span class="badge badge-status ${statusClass}">
-                                ${statusClass === 'concluido' ? 'Concluído' : 
-                                 statusClass === 'atrasado' ? 'Atrasado' : 
-                                 'Em Andamento'}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="action-details">
-                        <div class="detail">
-                            <div class="detail-label">Por que</div>
-                            <div class="detail-value">${acao.why}</div>
-                        </div>
-                        <div class="detail">
-                            <div class="detail-label">Responsável</div>
-                            <div class="detail-value">${acao.who}</div>
-                        </div>
-                        <div class="detail">
-                            <div class="detail-label">Setor</div>
-                            <div class="detail-value">${acao.area}</div>
-                        </div>
-                        <div class="detail">
-                            <div class="detail-label">Prazo</div>
-                            <div class="detail-value">
-                                ${formatarData5W2H(acao.inicio)} → ${formatarData5W2H(acao.fimPlanejado)}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="action-footer">
-                        <div class="detail">
-                            <div class="detail-label">Como</div>
-                            <div class="detail-value">${acao.how || 'Não informado'}</div>
-                        </div>
-                        <div class="action-actions">
-                            <button class="btn btn-outline btn-sm" onclick="editAction5W2H('${acao.id}')" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-success btn-sm" onclick="completeAction5W2H('${acao.id}')" title="Concluir">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteAction5W2H('${acao.id}')" title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(actionItem);
+            actionForm.addEventListener('submit', saveAction5W2H);
+            
+            btnRefresh.addEventListener('click', loadW2HActions);
+            btnGeneratePdf.addEventListener('click', generatePDF5W2H);
+            btnApplyFilters.addEventListener('click', applyFilters5W2H);
+            btnClearFilters.addEventListener('click', clearFilters5W2H);
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === actionModal) {
+                    closeModal5W2H();
+                }
             });
 
-            atualizarEstatisticas5W2H(acoes);
+            searchInput.addEventListener('input', applyFilters5W2H);
         }
 
-        function atualizarEstatisticas5W2H(acoes) {
-            document.getElementById('total-actions').textContent = acoes.length;
-            document.getElementById('in-progress').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'em-andamento').length;
-            document.getElementById('completed').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'concluido').length;
-            document.getElementById('overdue').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'atrasado').length;
-        }
-
-        function updateFilters5W2H() {
-            const responsibleSelect = document.getElementById('filter-responsible');
-            const responsaveis = [...new Set(allActions.map(acao => acao.who))];
-            responsibleSelect.innerHTML = '<option value="all">Todos</option>';
-            responsaveis.forEach(responsavel => {
-                const option = document.createElement('option');
-                option.value = responsavel;
-                option.textContent = responsavel;
-                responsibleSelect.appendChild(option);
-            });
-
-            const areaSelect = document.getElementById('filter-area');
-            const areas = [...new Set(allActions.map(acao => acao.area))];
-            areaSelect.innerHTML = '<option value="all">Todos</option>';
-            areas.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area;
-                option.textContent = area;
-                areaSelect.appendChild(option);
-            });
-        }
-
-        function aplicarFiltros5W2H() {
-            const filtroPrioridade = document.getElementById('filter-priority').value;
-            const filtroResponsavel = document.getElementById('filter-responsible').value;
-            const filtroArea = document.getElementById('filter-area').value;
-            const filtroStatus = document.getElementById('filter-status').value;
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-
-            filteredActions = allActions.filter(acao => {
-                const passaPrioridade = filtroPrioridade === 'all' || acao.priorizacao === filtroPrioridade;
-                const passaResponsavel = filtroResponsavel === 'all' || acao.who === filtroResponsavel;
-                const passaArea = filtroArea === 'all' || acao.area === filtroArea;
-                const passaStatus = filtroStatus === 'all' || acao.status === filtroStatus;
-                const passaBusca = !searchTerm || 
-                    acao.what.toLowerCase().includes(searchTerm) ||
-                    acao.why.toLowerCase().includes(searchTerm) ||
-                    acao.who.toLowerCase().includes(searchTerm);
-                
-                return passaPrioridade && passaResponsavel && passaArea && passaStatus && passaBusca;
-            });
-
-            renderizarAcoes5W2H(filteredActions);
-        }
-
-        function clearFilters5W2H() {
-            document.getElementById('filter-priority').value = 'all';
-            document.getElementById('filter-responsible').value = 'all';
-            document.getElementById('filter-area').value = 'all';
-            document.getElementById('filter-status').value = 'all';
-            document.getElementById('search').value = '';
-            aplicarFiltros5W2H();
-        }
-
-        // Action functions 5W2H
-        function editAction5W2H(actionId) {
-            const action = allActions.find(a => a.id === actionId);
+        function openModal5W2H(action = null) {
+            editingId = action ? action.id : null;
+            modalTitle.textContent = action ? 'Editar Ação' : 'Nova Ação';
+            
             if (action) {
-                editingId = actionId;
-                document.getElementById('modal-title').textContent = 'Editar Ação';
-                
                 document.getElementById('form-what').value = action.what || '';
                 document.getElementById('form-why').value = action.why || '';
                 document.getElementById('form-who').value = action.who || '';
@@ -2821,36 +2714,255 @@
                 document.getElementById('form-where').value = action.where || '';
                 document.getElementById('form-inicio').value = action.inicio || '';
                 document.getElementById('form-prazo').value = action.prazo || '';
-                document.getElementById('form-custo').value = action.howMuch || '';
+                document.getElementById('form-custo').value = action.custo || '';
                 document.getElementById('form-priorizacao').value = action.priorizacao || 'Média';
                 document.getElementById('form-status').value = action.status || 'Em Execução';
                 document.getElementById('form-how').value = action.how || '';
+            } else {
+                actionForm.reset();
+                document.getElementById('form-priorizacao').value = 'Média';
+                document.getElementById('form-status').value = 'Em Execução';
+            }
+            
+            actionModal.style.display = 'flex';
+        }
+
+        function closeModal5W2H() {
+            actionModal.style.display = 'none';
+            editingId = null;
+            actionForm.reset();
+        }
+
+        async function saveAction5W2H(e) {
+            e.preventDefault();
+            
+            const actionData = {
+                what: document.getElementById('form-what').value,
+                why: document.getElementById('form-why').value,
+                who: document.getElementById('form-who').value,
+                area: document.getElementById('form-area').value,
+                where: document.getElementById('form-where').value,
+                inicio: document.getElementById('form-inicio').value,
+                prazo: document.getElementById('form-prazo').value,
+                custo: document.getElementById('form-custo').value,
+                priorizacao: document.getElementById('form-priorizacao').value,
+                status: document.getElementById('form-status').value,
+                how: document.getElementById('form-how').value,
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (!editingId) {
+                actionData.createdAt = new Date().toISOString();
+            }
+            
+            showLoading();
+            
+            try {
+                if (editingId) {
+                    await database.ref(`5w2h/${editingId}`).update(actionData);
+                    showToast('Ação atualizada com sucesso!');
+                } else {
+                    await database.ref('5w2h').push(actionData);
+                    showToast('Ação criada com sucesso!');
+                }
                 
-                openModal5W2H();
+                closeModal5W2H();
+                await loadW2HActions();
+                
+            } catch (error) {
+                showToast('Erro ao salvar ação', true);
+            } finally {
+                hideLoading();
             }
         }
 
-        function completeAction5W2H(actionId) {
-            const actionRef = database.ref(`5w2h/actions/${actionId}`);
-            const today = new Date().toISOString().split('T')[0];
+        async function loadW2HActions() {
+            showLoading();
+            try {
+                const w2hSnapshot = await database.ref('5w2h').once('value');
+                const w2hData = w2hSnapshot.val();
+                w2hActions = w2hData ? Object.keys(w2hData).map(key => ({ id: key, ...w2hData[key] })) : [];
+                
+                renderActions5W2H();
+                updateStats5W2H();
+                updateFilterOptions5W2H();
+                
+            } catch (error) {
+                showToast('Erro ao carregar ações', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderActions5W2H(actions = w2hActions) {
+            const container = document.getElementById('actions-container');
             
-            actionRef.update({
-                status: 'Realizado',
-                priorizacao: 'Realizado',
-                fimReal: today
-            })
-            .then(() => {
-                showToast5W2H('Ação concluída', 'success');
-            });
+            if (actions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Nenhuma ação encontrada</h3>
+                        <p>Clique em "Novo Plano de Ação" para adicionar a primeira ação.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = actions.map(action => {
+                const statusClass = action.status === 'Realizado' ? 'realizado' : action.priorizacao?.toLowerCase() || '';
+                
+                return `
+                    <div class="action-item ${statusClass}" data-id="${action.id}">
+                        <div class="action-header">
+                            <div class="action-title">${action.what || 'Sem título'}</div>
+                            <div class="action-meta">
+                                <span class="badge badge-priority">${action.priorizacao || 'Não definido'}</span>
+                                <span class="badge badge-status">${action.status || 'Pendente'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="action-details">
+                            <div class="detail">
+                                <div class="detail-label">Justificativa</div>
+                                <div class="detail-value">${action.why || 'Não informado'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Responsável</div>
+                                <div class="detail-value">${action.who || 'Não definido'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Setor</div>
+                                <div class="detail-value">${action.area || 'Não definido'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Local</div>
+                                <div class="detail-value">${action.where || 'Não informado'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Data Início</div>
+                                <div class="detail-value">${action.inicio ? formatDate5W2H(action.inicio) : 'Não definida'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Prazo</div>
+                                <div class="detail-value">${action.prazo ? action.prazo + ' dias' : 'Não definido'}</div>
+                            </div>
+                            <div class="detail">
+                                <div class="detail-label">Custo</div>
+                                <div class="detail-value">${action.custo ? 'R$ ' + parseFloat(action.custo).toFixed(2) : 'Não informado'}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-footer">
+                            <div class="action-info">
+                                <small class="text-muted">
+                                    Atualizado em: ${action.updatedAt ? formatDate5W2H(action.updatedAt) : 'Nunca'}
+                                </small>
+                            </div>
+                            <div class="action-actions">
+                                <button class="btn btn-sm btn-warning" onclick="editAction5W2H('${action.id}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAction5W2H('${action.id}')">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function deleteAction5W2H(actionId) {
-            deleteActionFromFirebase(actionId);
+        function editAction5W2H(actionId) {
+            const action = w2hActions.find(a => a.id === actionId);
+            if (action) openModal5W2H(action);
         }
 
-        // PDF Generation 5W2H
+        async function deleteAction5W2H(actionId) {
+            if (!confirm('Tem certeza que deseja excluir esta ação?')) return;
+            
+            showLoading();
+            try {
+                await database.ref(`5w2h/${actionId}`).remove();
+                showToast('Ação excluída com sucesso!');
+                await loadW2HActions();
+            } catch (error) {
+                showToast('Erro ao excluir ação', true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateStats5W2H() {
+            const total = w2hActions.length;
+            const inProgressCount = w2hActions.filter(a => a.status === 'Em Execução').length;
+            const completedCount = w2hActions.filter(a => a.status === 'Realizado').length;
+            const overdueCount = w2hActions.filter(a => {
+                if (!a.inicio || !a.prazo || a.status === 'Realizado') return false;
+                const startDate = new Date(a.inicio);
+                const dueDate = new Date(startDate.getTime() + (a.prazo * 24 * 60 * 60 * 1000));
+                return dueDate < new Date();
+            }).length;
+            
+            totalActions.textContent = total;
+            inProgress.textContent = inProgressCount;
+            completed.textContent = completedCount;
+            overdue.textContent = overdueCount;
+        }
+
+        function updateFilterOptions5W2H() {
+            const responsibles = [...new Set(w2hActions.map(a => a.who).filter(Boolean))];
+            const responsibleSelect = document.getElementById('filter-responsible');
+            responsibleSelect.innerHTML = '<option value="all">Todos</option>' + 
+                responsibles.map(r => `<option value="${r}">${r}</option>`).join('');
+            
+            const areas = [...new Set(w2hActions.map(a => a.area).filter(Boolean))];
+            const areaSelect = document.getElementById('filter-area');
+            areaSelect.innerHTML = '<option value="all">Todos</option>' + 
+                areas.map(a => `<option value="${a}">${a}</option>`).join('');
+        }
+
+        function applyFilters5W2H() {
+            let filtered = [...w2hActions];
+            
+            if (filterPriority.value !== 'all') {
+                filtered = filtered.filter(a => a.priorizacao === filterPriority.value);
+            }
+            
+            if (filterResponsible.value !== 'all') {
+                filtered = filtered.filter(a => a.who === filterResponsible.value);
+            }
+            
+            if (filterArea.value !== 'all') {
+                filtered = filtered.filter(a => a.area === filterArea.value);
+            }
+            
+            if (filterStatus.value !== 'all') {
+                filtered = filtered.filter(a => a.status === filterStatus.value);
+            }
+            
+            if (searchInput.value) {
+                const searchTerm = searchInput.value.toLowerCase();
+                filtered = filtered.filter(a => 
+                    (a.what && a.what.toLowerCase().includes(searchTerm)) ||
+                    (a.why && a.why.toLowerCase().includes(searchTerm)) ||
+                    (a.who && a.who.toLowerCase().includes(searchTerm)) ||
+                    (a.area && a.area.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            renderActions5W2H(filtered);
+        }
+
+        function clearFilters5W2H() {
+            filterPriority.value = 'all';
+            filterResponsible.value = 'all';
+            filterArea.value = 'all';
+            filterStatus.value = 'all';
+            searchInput.value = '';
+            renderActions5W2H();
+        }
+
         function generatePDF5W2H() {
-            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
             doc.setFontSize(16);
@@ -2860,12 +2972,12 @@
             doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
             
             const tableHeaders = [['O Que', 'Responsável', 'Setor', 'Prioridade', 'Status']];
-            const tableData = filteredActions.map(acao => [
+            const tableData = w2hActions.map(acao => [
                 acao.what.substring(0, 40) + (acao.what.length > 40 ? '...' : ''),
                 acao.who,
                 acao.area,
                 acao.priorizacao,
-                calcularStatus5W2H(acao)
+                acao.status
             ]);
             
             doc.autoTable({
@@ -2878,56 +2990,60 @@
             });
             
             doc.save(`relatorio_5w2h_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast5W2H('PDF gerado', 'success');
+            showToast('PDF gerado com sucesso!');
         }
 
-        // Event Listeners 5W2H
-        document.addEventListener('DOMContentLoaded', function() {
-            // 5W2H buttons
-            document.getElementById('btn-new-action').addEventListener('click', openModal5W2H);
-            document.getElementById('btn-apply-filters').addEventListener('click', aplicarFiltros5W2H);
-            document.getElementById('btn-clear-filters').addEventListener('click', clearFilters5W2H);
+        function formatDate5W2H(dateString) {
+            if (!dateString) return 'Não definida';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dateString;
+            }
+        }
 
-            // 5W2H Modal buttons
-            document.getElementById('modal-close').addEventListener('click', closeModal5W2H);
-            document.getElementById('btn-cancel').addEventListener('click', closeModal5W2H);
+        // ========== FUNÇÕES UTILITÁRIAS ==========
+        function showLoading() {
+            loading.style.display = 'flex';
+        }
 
-            // 5W2H Form submission
-            document.getElementById('action-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const actionData = {
-                    what: document.getElementById('form-what').value,
-                    why: document.getElementById('form-why').value,
-                    who: document.getElementById('form-who').value,
-                    area: document.getElementById('form-area').value,
-                    where: document.getElementById('form-where').value,
-                    inicio: document.getElementById('form-inicio').value,
-                    prazo: document.getElementById('form-prazo').value || null,
-                    howMuch: document.getElementById('form-custo').value || null,
-                    priorizacao: document.getElementById('form-priorizacao').value,
-                    status: document.getElementById('form-status').value,
-                    how: document.getElementById('form-how').value,
-                    updatedAt: new Date().toISOString()
-                };
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
 
-                saveActionToFirebase(actionData);
-            });
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
 
-            // 5W2H Search input
-            document.getElementById('search').addEventListener('input', aplicarFiltros5W2H);
-
-            // 5W2H Close modal on outside click
-            window.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modal') && e.target.id === 'action-modal') {
-                    closeModal5W2H();
-                }
-            });
+        // Monitorar status da conexão
+        database.ref('.info/connected').on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                connectionStatus.textContent = '✅ Online';
+                connectionStatus.className = 'connection-status connection-online';
+            } else {
+                connectionStatus.textContent = '❌ Offline';
+                connectionStatus.className = 'connection-status connection-offline';
+            }
         });
 
-        // Global functions 5W2H
+        // ========== FUNÇÕES GLOBAIS ==========
+        window.abrirModalEpi = abrirModalEpi;
+        window.abrirModalEstoque = abrirModalEstoque;
+        window.abrirModalEntrega = abrirModalEntrega;
+        window.filtrarEPIs = filtrarEPIs;
+        window.filtrarEstoque = filtrarEstoque;
+        window.filtrarEntregas = filtrarEntregas;
+        window.excluirItemEPI = excluirItemEPI;
+        window.excluirItemEstoque = excluirItemEstoque;
+        window.excluirItemEntrega = excluirItemEntrega;
         window.editAction5W2H = editAction5W2H;
-        window.completeAction5W2H = completeAction5W2H;
         window.deleteAction5W2H = deleteAction5W2H;
     </script>
 </body>
