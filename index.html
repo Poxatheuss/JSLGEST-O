@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de EPI</title>
+    <title>Sistema Unificado JSL - EPI e 5W2H</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <!-- Adicione o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Mantenha todo o CSS anterior igual */
+        /* CSS do Sistema de Gestão de EPI (mantido igual) */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -526,6 +527,267 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Navegação entre sistemas */
+        .system-navigation {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .system-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            font-size: 16px;
+        }
+
+        .system-tab:hover {
+            background: #e9ecef;
+        }
+
+        .system-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .system-tab.epi.active {
+            background: #3498db;
+        }
+
+        .system-tab.w2h.active {
+            background: #8e44ad;
+        }
+
+        .system-content {
+            display: none;
+        }
+
+        .system-content.active {
+            display: block;
+        }
+
+        /* CSS do Plano de Ação 5W2H (mantido igual) */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 3px solid #4f8af7;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .input, .select {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .input:focus, .select:focus {
+            outline: none;
+            border-color: #4f8af7;
+        }
+
+        .actions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .action-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #4f8af7;
+            transition: box-shadow 0.2s;
+        }
+
+        .action-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-item.alta { border-left-color: #ef4444; }
+        .action-item.media { border-left-color: #f59e0b; }
+        .action-item.baixa { border-left-color: #10b981; }
+        .action-item.realizado { border-left-color: #6b7280; }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .action-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            flex: 1;
+        }
+
+        .action-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-priority { background: #e8f0fe; color: #4f8af7; }
+        .badge-status { background: #f1f5f9; color: #6b7280; }
+        .badge-success { background: #d1fae5; color: #10b981; }
+        .badge-warning { background: #fef3c7; color: #f59e0b; }
+        .badge-danger { background: #fee2e2; color: #ef4444; }
+
+        .action-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .action-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .action-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #4f8af7;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-header {
+                flex-direction: column;
+            }
+            
+            .action-meta {
+                width: 100%;
+            }
+            
+            .action-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-footer {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .action-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -538,368 +800,566 @@
     
     <div class="container">
         <div class="logo">
-            <h1>Sistema de Gestão de EPI</h1>
-            <p>Controle completo de Equipamentos de Proteção Individual</p>
+            <h1>Sistema Unificado JSL</h1>
+            <p>Gestão de EPI e Plano de Ação 5W2H</p>
         </div>
         
-        <div class="instructions">
-            <h4>Instruções de Uso</h4>
-            <p>Utilize as abas para navegar entre os diferentes módulos do sistema. Preencha todos os campos obrigatórios marcados com asterisco (*). <strong>Todos os dados são salvos automaticamente no Firebase!</strong></p>
+        <!-- Navegação entre sistemas -->
+        <div class="system-navigation">
+            <button class="system-tab epi active" data-system="epi">Sistema de Gestão de EPI</button>
+            <button class="system-tab w2h" data-system="w2h">Plano de Ação 5W2H</button>
         </div>
-        
-        <div class="dashboard">
-            <div class="dashboard-card">
-                <h3>Total de EPIs Cadastrados</h3>
-                <div class="value" id="total-epis">0</div>
-                <div class="subtext">Itens no sistema</div>
-            </div>
-            <div class="dashboard-card">
-                <h3>EPIs Vencidos</h3>
-                <div class="value" id="epis-vencidos">0</div>
-                <div class="subtext">Necessitam substituição</div>
-            </div>
-            <div class="dashboard-card warning">
-                <h3>EPIs Próximos do Vencimento</h3>
-                <div class="value" id="epis-proximo-vencimento">0</div>
-                <div class="subtext">Vencem em menos de 30 dias</div>
-            </div>
-            <div class="dashboard-card danger">
-                <h3>Estoques Baixos</h3>
-                <div class="value" id="estoques-baixos">0</div>
-                <div class="subtext">Necessitam reposição</div>
-            </div>
-        </div>
-        
-        <div class="tabs">
-            <div class="tab active" data-tab="epis">Controle de EPIs</div>
-            <div class="tab" data-tab="estoque">Controle de Estoque</div>
-            <div class="tab" data-tab="entregas">Controle de Entregas</div>
-            <div class="tab" data-tab="relatorios">Relatórios</div>
-        </div>
-        
-        <!-- ABA: Controle de EPIs -->
-        <div class="tab-content active" id="epis-tab">
-            <div class="actions">
-                <button class="btn btn-primary" id="btn-adicionar-epi">
-                    ➕ Adicionar EPI
-                </button>
-                <div class="search-box">
-                    <input type="text" id="search-epi" placeholder="Buscar EPI...">
-                    <button onclick="filtrarEPIs()">🔍 Buscar</button>
-                </div>
-            </div>
-            
-            <div class="table-container">
-                <table id="tabela-epis">
-                    <thead>
-                        <tr>
-                            <th>NOME DO EPI</th>
-                            <th>FABRICANTE</th>
-                            <th>C.A</th>
-                            <th>VALIDADE DO C.A</th>
-                            <th>VALIDADE DO EPI</th>
-                            <th>STATUS</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Os dados serão inseridos aqui via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- ABA: Controle de Estoque -->
-        <div class="tab-content" id="estoque-tab">
-            <div class="actions">
-                <button class="btn btn-primary" id="btn-adicionar-estoque">
-                    ➕ Adicionar ao Estoque
-                </button>
-                <button class="btn btn-info" id="btn-entrada-estoque">
-                    📥 Nova Entrada
-                </button>
-                <div class="search-box">
-                    <input type="text" id="search-estoque" placeholder="Buscar no estoque...">
-                    <button onclick="filtrarEstoque()">🔍 Buscar</button>
-                </div>
-            </div>
-            
-            <div class="table-container">
-                <table id="tabela-estoque">
-                    <thead>
-                        <tr>
-                            <th>NOME DO EPI</th>
-                            <th>SAÍDAS</th>
-                            <th>ENTRADAS</th>
-                            <th>ESTOQUE ATUAL</th>
-                            <th>QNTD. MÍNIMA</th>
-                            <th>STATUS</th>
-                            <th>VALOR UNITÁRIO</th>
-                            <th>GASTO TOTAL</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Os dados serão inseridos aqui via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- ABA: Controle de Entregas -->
-        <div class="tab-content" id="entregas-tab">
-            <div class="actions">
-                <button class="btn btn-primary" id="btn-nova-entrega">
-                    ➕ Nova Entrega
-                </button>
-                <div class="search-box">
-                    <input type="text" id="search-entregas" placeholder="Buscar entregas...">
-                    <button onclick="filtrarEntregas()">🔍 Buscar</button>
-                </div>
-            </div>
-            
-            <div class="table-container">
-                <table id="tabela-entregas">
-                    <thead>
-                        <tr>
-                            <th>DATA</th>
-                            <th>NOME DO FUNCIONÁRIO</th>
-                            <th>CARGO</th>
-                            <th>SETOR</th>
-                            <th>EPI</th>
-                            <th>QNTD.</th>
-                            <th>VALOR UNITÁRIO</th>
-                            <th>VALOR TOTAL</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Os dados serão inseridos aqui via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- ABA: Relatórios -->
-        <div class="tab-content" id="relatorios-tab">
-            <div class="actions">
-                <button class="btn btn-primary" id="btn-relatorio-epis">
-                    📄 Relatório de EPIs
-                </button>
-                <button class="btn btn-success" id="btn-relatorio-estoque">
-                    📄 Relatório de Estoque
-                </button>
-                <button class="btn btn-warning" id="btn-relatorio-entregas">
-                    📄 Relatório de Entregas
-                </button>
-                <button class="btn btn-danger" id="btn-backup">
-                    💾 Backup Completo
-                </button>
-            </div>
-            
-            <div class="dashboard" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                <div class="dashboard-card">
-                    <h3>EPIs por Status</h3>
-                    <div id="chart-status" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <canvas id="statusChart" width="200" height="200"></canvas>
-                    </div>
-                </div>
-                <div class="dashboard-card">
-                    <h3>Top 5 EPIs Mais Utilizados</h3>
-                    <div id="chart-top-epis" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <canvas id="topEpisChart" width="200" height="200"></canvas>
-                    </div>
-                </div>
-                <div class="dashboard-card">
-                    <h3>Gastos por Categoria</h3>
-                    <div id="chart-gastos" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <canvas id="gastosChart" width="200" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para Adicionar/Editar EPI -->
-    <div class="modal" id="modal-epi">
-        <div class="modal-content">
-            <h2 id="modal-epi-titulo">Adicionar Novo EPI</h2>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="nome-epi" class="required">NOME DO EPI:</label>
-                    <input type="text" id="nome-epi" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="fabricante-epi">FABRICANTE DO EPI:</label>
-                    <input type="text" id="fabricante-epi">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="ca-epi">C.A:</label>
-                    <input type="text" id="ca-epi">
-                </div>
-                
-                <div class="form-group">
-                    <label for="validade-ca">VALIDADE DO C.A:</label>
-                    <input type="date" id="validade-ca">
-                </div>
-                
-                <div class="form-group">
-                    <label for="validade-epi">VALIDADE DO EPI:</label>
-                    <input type="date" id="validade-epi">
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn btn-danger" id="btn-cancelar-epi">
-                    ✖ Cancelar
-                </button>
-                <button class="btn btn-success" id="btn-salvar-epi">
-                    💾 Salvar EPI
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para Adicionar/Editar Estoque -->
-    <div class="modal" id="modal-estoque">
-        <div class="modal-content">
-            <h2 id="modal-estoque-titulo">Adicionar ao Estoque</h2>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="epi-estoque" class="required">EPI:</label>
-                    <select id="epi-estoque" required>
-                        <option value="">Selecione um EPI...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="entradas-estoque" class="required">QUANTIDADE INICIAL:</label>
-                    <input type="number" id="entradas-estoque" min="0" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="quantidade-minima" class="required">QUANTIDADE MÍNIMA:</label>
-                    <input type="number" id="quantidade-minima" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="valor-unitario">VALOR UNITÁRIO (R$):</label>
-                    <input type="number" id="valor-unitario" min="0" step="0.01">
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn btn-danger" id="btn-cancelar-estoque">
-                    ✖ Cancelar
-                </button>
-                <button class="btn btn-success" id="btn-salvar-estoque">
-                    💾 Salvar Estoque
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal para Nova Entrada no Estoque -->
-    <div class="modal" id="modal-entrada-estoque">
-        <div class="modal-content">
-            <h2>Nova Entrada no Estoque</h2>
+        <!-- Sistema de Gestão de EPI -->
+        <div class="system-content active" id="epi-system">
+            <div class="instructions">
+                <h4>Instruções de Uso - Gestão de EPI</h4>
+                <p>Utilize as abas para navegar entre os diferentes módulos do sistema. Preencha todos os campos obrigatórios marcados com asterisco (*). <strong>Todos os dados são salvos automaticamente no Firebase!</strong></p>
+            </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="epi-entrada" class="required">EPI:</label>
-                    <select id="epi-entrada" required>
-                        <option value="">Selecione um EPI...</option>
-                    </select>
+            <div class="dashboard">
+                <div class="dashboard-card">
+                    <h3>Total de EPIs Cadastrados</h3>
+                    <div class="value" id="total-epis">0</div>
+                    <div class="subtext">Itens no sistema</div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="quantidade-entrada" class="required">QUANTIDADE A ADICIONAR:</label>
-                    <input type="number" id="quantidade-entrada" min="1" required>
+                <div class="dashboard-card">
+                    <h3>EPIs Vencidos</h3>
+                    <div class="value" id="epis-vencidos">0</div>
+                    <div class="subtext">Necessitam substituição</div>
+                </div>
+                <div class="dashboard-card warning">
+                    <h3>EPIs Próximos do Vencimento</h3>
+                    <div class="value" id="epis-proximo-vencimento">0</div>
+                    <div class="subtext">Vencem em menos de 30 dias</div>
+                </div>
+                <div class="dashboard-card danger">
+                    <h3>Estoques Baixos</h3>
+                    <div class="value" id="estoques-baixos">0</div>
+                    <div class="subtext">Necessitam reposição</div>
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="valor-unitario-entrada">NOVO VALOR UNITÁRIO (R$):</label>
-                    <input type="number" id="valor-unitario-entrada" min="0" step="0.01" placeholder="Deixe em branco para manter o valor atual">
+            <div class="tabs">
+                <div class="tab active" data-tab="epis">Controle de EPIs</div>
+                <div class="tab" data-tab="estoque">Controle de Estoque</div>
+                <div class="tab" data-tab="entregas">Controle de Entregas</div>
+                <div class="tab" data-tab="relatorios">Relatórios</div>
+            </div>
+            
+            <!-- ABA: Controle de EPIs -->
+            <div class="tab-content active" id="epis-tab">
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-adicionar-epi">
+                        ➕ Adicionar EPI
+                    </button>
+                    <div class="search-box">
+                        <input type="text" id="search-epi" placeholder="Buscar EPI...">
+                        <button onclick="filtrarEPIs()">🔍 Buscar</button>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="data-entrada">DATA DA ENTRADA:</label>
-                    <input type="date" id="data-entrada">
+                <div class="table-container">
+                    <table id="tabela-epis">
+                        <thead>
+                            <tr>
+                                <th>NOME DO EPI</th>
+                                <th>FABRICANTE</th>
+                                <th>C.A</th>
+                                <th>VALIDADE DO C.A</th>
+                                <th>VALIDADE DO EPI</th>
+                                <th>STATUS</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Os dados serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div class="form-actions">
-                <button class="btn btn-danger" id="btn-cancelar-entrada">
-                    ✖ Cancelar
-                </button>
-                <button class="btn btn-success" id="btn-salvar-entrada">
-                    💾 Registrar Entrada
-                </button>
+            <!-- ABA: Controle de Estoque -->
+            <div class="tab-content" id="estoque-tab">
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-adicionar-estoque">
+                        ➕ Adicionar ao Estoque
+                    </button>
+                    <button class="btn btn-info" id="btn-entrada-estoque">
+                        📥 Nova Entrada
+                    </button>
+                    <div class="search-box">
+                        <input type="text" id="search-estoque" placeholder="Buscar no estoque...">
+                        <button onclick="filtrarEstoque()">🔍 Buscar</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="tabela-estoque">
+                        <thead>
+                            <tr>
+                                <th>NOME DO EPI</th>
+                                <th>SAÍDAS</th>
+                                <th>ENTRADAS</th>
+                                <th>ESTOQUE ATUAL</th>
+                                <th>QNTD. MÍNIMA</th>
+                                <th>STATUS</th>
+                                <th>VALOR UNITÁRIO</th>
+                                <th>GASTO TOTAL</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Os dados serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ABA: Controle de Entregas -->
+            <div class="tab-content" id="entregas-tab">
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-nova-entrega">
+                        ➕ Nova Entrega
+                    </button>
+                    <div class="search-box">
+                        <input type="text" id="search-entregas" placeholder="Buscar entregas...">
+                        <button onclick="filtrarEntregas()">🔍 Buscar</button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="tabela-entregas">
+                        <thead>
+                            <tr>
+                                <th>DATA</th>
+                                <th>NOME DO FUNCIONÁRIO</th>
+                                <th>CARGO</th>
+                                <th>SETOR</th>
+                                <th>EPI</th>
+                                <th>QNTD.</th>
+                                <th>VALOR UNITÁRIO</th>
+                                <th>VALOR TOTAL</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Os dados serão inseridos aqui via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ABA: Relatórios -->
+            <div class="tab-content" id="relatorios-tab">
+                <div class="actions">
+                    <button class="btn btn-primary" id="btn-relatorio-epis">
+                        📄 Relatório de EPIs
+                    </button>
+                    <button class="btn btn-success" id="btn-relatorio-estoque">
+                        📄 Relatório de Estoque
+                    </button>
+                    <button class="btn btn-warning" id="btn-relatorio-entregas">
+                        📄 Relatório de Entregas
+                    </button>
+                    <button class="btn btn-danger" id="btn-backup">
+                        💾 Backup Completo
+                    </button>
+                </div>
+                
+                <div class="dashboard" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="dashboard-card">
+                        <h3>EPIs por Status</h3>
+                        <div id="chart-status" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="statusChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Top 5 EPIs Mais Utilizados</h3>
+                        <div id="chart-top-epis" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="topEpisChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Gastos por Categoria</h3>
+                        <div id="chart-gastos" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="gastosChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modais do Sistema EPI -->
+            <div class="modal" id="modal-epi">
+                <div class="modal-content">
+                    <h2 id="modal-epi-titulo">Adicionar Novo EPI</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nome-epi" class="required">NOME DO EPI:</label>
+                            <input type="text" id="nome-epi" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fabricante-epi">FABRICANTE DO EPI:</label>
+                            <input type="text" id="fabricante-epi">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ca-epi">C.A:</label>
+                            <input type="text" id="ca-epi">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="validade-ca">VALIDADE DO C.A:</label>
+                            <input type="date" id="validade-ca">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="validade-epi">VALIDADE DO EPI:</label>
+                            <input type="date" id="validade-epi">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-danger" id="btn-cancelar-epi">
+                            ✖ Cancelar
+                        </button>
+                        <button class="btn btn-success" id="btn-salvar-epi">
+                            💾 Salvar EPI
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para Adicionar/Editar Estoque -->
+            <div class="modal" id="modal-estoque">
+                <div class="modal-content">
+                    <h2 id="modal-estoque-titulo">Adicionar ao Estoque</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="epi-estoque" class="required">EPI:</label>
+                            <select id="epi-estoque" required>
+                                <option value="">Selecione um EPI...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="entradas-estoque" class="required">QUANTIDADE INICIAL:</label>
+                            <input type="number" id="entradas-estoque" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantidade-minima" class="required">QUANTIDADE MÍNIMA:</label>
+                            <input type="number" id="quantidade-minima" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="valor-unitario">VALOR UNITÁRIO (R$):</label>
+                            <input type="number" id="valor-unitario" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-danger" id="btn-cancelar-estoque">
+                            ✖ Cancelar
+                        </button>
+                        <button class="btn btn-success" id="btn-salvar-estoque">
+                            💾 Salvar Estoque
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Nova Entrada no Estoque -->
+            <div class="modal" id="modal-entrada-estoque">
+                <div class="modal-content">
+                    <h2>Nova Entrada no Estoque</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="epi-entrada" class="required">EPI:</label>
+                            <select id="epi-entrada" required>
+                                <option value="">Selecione um EPI...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantidade-entrada" class="required">QUANTIDADE A ADICIONAR:</label>
+                            <input type="number" id="quantidade-entrada" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="valor-unitario-entrada">NOVO VALOR UNITÁRIO (R$):</label>
+                            <input type="number" id="valor-unitario-entrada" min="0" step="0.01" placeholder="Deixe em branco para manter o valor atual">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="data-entrada">DATA DA ENTRADA:</label>
+                            <input type="date" id="data-entrada">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-danger" id="btn-cancelar-entrada">
+                            ✖ Cancelar
+                        </button>
+                        <button class="btn btn-success" id="btn-salvar-entrada">
+                            💾 Registrar Entrada
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para Nova Entrega -->
+            <div class="modal" id="modal-entrega">
+                <div class="modal-content">
+                    <h2 id="modal-entrega-titulo">Nova Entrega de EPI</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="data-entrega" class="required">DATA:</label>
+                            <input type="date" id="data-entrega" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="funcionario-entrega" class="required">NOME DO FUNCIONÁRIO:</label>
+                            <input type="text" id="funcionario-entrega" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cargo-entrega">CARGO:</label>
+                            <input type="text" id="cargo-entrega">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="setor-entrega">SETOR:</label>
+                            <input type="text" id="setor-entrega">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="epi-entrega" class="required">EPI:</label>
+                            <select id="epi-entrega" required>
+                                <option value="">Selecione um EPI...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantidade-entrega" class="required">QUANTIDADE:</label>
+                            <input type="number" id="quantidade-entrega" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-danger" id="btn-cancelar-entrega">
+                            ✖ Cancelar
+                        </button>
+                        <button class="btn btn-success" id="btn-salvar-entrega">
+                            💾 Registrar Entrega
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Modal para Nova Entrega -->
-    <div class="modal" id="modal-entrega">
-        <div class="modal-content">
-            <h2 id="modal-entrega-titulo">Nova Entrega de EPI</h2>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="data-entrega" class="required">DATA:</label>
-                    <input type="date" id="data-entrega" required>
+
+        <!-- Sistema Plano de Ação 5W2H -->
+        <div class="system-content" id="w2h-system">
+            <div class="instructions">
+                <h4>Instruções de Uso - Plano de Ação 5W2H</h4>
+                <p>Utilize os filtros para encontrar ações específicas. Preencha todos os campos obrigatórios marcados com asterisco (*). <strong>Todos os dados são salvos automaticamente no Firebase!</strong></p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-actions">0</div>
+                    <div class="stat-label">Total de Ações</div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="funcionario-entrega" class="required">NOME DO FUNCIONÁRIO:</label>
-                    <input type="text" id="funcionario-entrega" required>
+                <div class="stat-card">
+                    <div class="stat-number" id="in-progress">0</div>
+                    <div class="stat-label">Em Andamento</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completed">0</div>
+                    <div class="stat-label">Concluídas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="overdue">0</div>
+                    <div class="stat-label">Atrasadas</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Prioridade</label>
+                        <select class="select" id="filter-priority">
+                            <option value="all">Todas</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Média">Média</option>
+                            <option value="Baixa">Baixa</option>
+                            <option value="Realizado">Realizado</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Responsável</label>
+                        <select class="select" id="filter-responsible">
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Setor</label>
+                        <select class="select" id="filter-area">
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="select" id="filter-status">
+                            <option value="all">Todos</option>
+                            <option value="Em Execução">Em Execução</option>
+                            <option value="Realizado">Realizado</option>
+                            <option value="Pendente">Pendente</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: end;">
+                    <div class="filter-group" style="flex: 1;">
+                        <label class="filter-label">Buscar</label>
+                        <input type="text" class="input" id="search" placeholder="Digite para buscar...">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" id="btn-clear-filters">
+                            <i class="fas fa-times"></i> Limpar
+                        </button>
+                        <button class="btn btn-primary" id="btn-apply-filters">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions List -->
+            <div class="actions-list" id="actions-container">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i><br>
+                    <p>Carregando ações...</p>
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="cargo-entrega">CARGO:</label>
-                    <input type="text" id="cargo-entrega">
-                </div>
-                
-                <div class="form-group">
-                    <label for="setor-entrega">SETOR:</label>
-                    <input type="text" id="setor-entrega">
+            <!-- Modal Nova Ação -->
+            <div class="modal" id="action-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="modal-title" id="modal-title">Nova Ação</div>
+                        <button class="modal-close" id="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="action-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">O que será feito *</label>
+                                    <textarea class="form-textarea" id="form-what" required placeholder="Descreva a ação..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Justificativa *</label>
+                                    <textarea class="form-textarea" id="form-why" required placeholder="Por que fazer?"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Responsável *</label>
+                                    <input type="text" class="form-input" id="form-who" required placeholder="Nome do responsável">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Setor *</label>
+                                    <select class="form-select" id="form-area" required>
+                                        <option value="">Selecione</option>
+                                        <option value="SST">SST</option>
+                                        <option value="FINANCEIRO">FINanceiro</option>
+                                        <option value="GERENCIA">Gerência</option>
+                                        <option value="SST/FINANCEIRO">SST/Financeiro</option>
+                                        <option value="E-SOCIAL">E-Social</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Local</label>
+                                    <input type="text" class="form-input" id="form-where" placeholder="Onde será feito">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Data Início</label>
+                                    <input type="date" class="form-input" id="form-inicio">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Prazo (dias)</label>
+                                    <input type="number" class="form-input" id="form-prazo" min="0" placeholder="Dias">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Custo (R$)</label>
+                                    <input type="number" class="form-input" id="form-custo" min="0" step="0.01" placeholder="0.00">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Prioridade *</label>
+                                    <select class="form-select" id="form-priorizacao" required>
+                                        <option value="Alta">Alta</option>
+                                        <option value="Média">Média</option>
+                                        <option value="Baixa">Baixa</option>
+                                        <option value="Realizado">Realizado</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Status *</label>
+                                    <select class="form-select" id="form-status" required>
+                                        <option value="Em Execução">Em Execução</option>
+                                        <option value="Realizado">Realizado</option>
+                                        <option value="Pendente">Pendente</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Como será feito</label>
+                                <textarea class="form-textarea" id="form-how" rows="3" placeholder="Descreva como..."></textarea>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                                <button type="button" class="btn btn-outline" id="btn-cancel">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="epi-entrega" class="required">EPI:</label>
-                    <select id="epi-entrega" required>
-                        <option value="">Selecione um EPI...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="quantidade-entrega" class="required">QUANTIDADE:</label>
-                    <input type="number" id="quantidade-entrega" min="1" required>
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn btn-danger" id="btn-cancelar-entrega">
-                    ✖ Cancelar
-                </button>
-                <button class="btn btn-success" id="btn-salvar-entrega">
-                    💾 Registrar Entrega
-                </button>
-            </div>
+
+            <!-- Toast -->
+            <div class="toast" id="toast"></div>
         </div>
     </div>
 
@@ -923,25 +1383,55 @@
         // Inicialização do jsPDF
         const { jsPDF } = window.jspdf;
         
-        // Variáveis globais
+        // ========== SISTEMA DE GESTÃO DE EPI ==========
+        // Variáveis globais EPI
         let epis = [];
         let estoque = [];
         let entregas = [];
         let editandoIndex = -1;
         let editandoTipo = '';
         
-        // Elementos DOM
+        // Elementos DOM EPI
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         const saveIndicator = document.getElementById('save-indicator');
         const connectionStatus = document.getElementById('connection-status');
         
-        // Modais
+        // Modais EPI
         const modalEpi = document.getElementById('modal-epi');
         const modalEstoque = document.getElementById('modal-estoque');
         const modalEntradaEstoque = document.getElementById('modal-entrada-estoque');
         const modalEntrega = document.getElementById('modal-entrega');
         
+        // ========== SISTEMA 5W2H ==========
+        // Global variables 5W2H
+        let allActions = [];
+        let filteredActions = [];
+        let editingId = null;
+
+        // ========== NAVEGAÇÃO ENTRE SISTEMAS ==========
+        const systemTabs = document.querySelectorAll('.system-tab');
+        const systemContents = document.querySelectorAll('.system-content');
+
+        systemTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const systemId = tab.getAttribute('data-system');
+                
+                // Update active system tab
+                systemTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding system
+                systemContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${systemId}-system`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // ========== CÓDIGO DO SISTEMA DE GESTÃO DE EPI ==========
         // Monitorar status da conexão
         firebase.database().ref('.info/connected').on('value', function(snapshot) {
             if (snapshot.val() === true) {
@@ -956,8 +1446,9 @@
         // Carregar dados do Firebase ao iniciar
         document.addEventListener('DOMContentLoaded', function() {
             carregarDadosFirebase();
+            loadActionsFromFirebase(); // Carregar dados do 5W2H
             
-            // Event listeners para abas
+            // Event listeners para abas EPI
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tabId = tab.getAttribute('data-tab');
@@ -965,7 +1456,7 @@
                 });
             });
             
-            // Event listeners para botões
+            // Event listeners para botões EPI
             document.getElementById('btn-adicionar-epi').addEventListener('click', () => abrirModalEpi());
             document.getElementById('btn-adicionar-estoque').addEventListener('click', () => abrirModalEstoque());
             document.getElementById('btn-entrada-estoque').addEventListener('click', () => abrirModalEntradaEstoque());
@@ -981,13 +1472,13 @@
             document.getElementById('btn-salvar-entrada').addEventListener('click', salvarEntradaEstoque);
             document.getElementById('btn-salvar-entrega').addEventListener('click', salvarEntrega);
             
-            // Event listeners para relatórios
+            // Event listeners para relatórios EPI
             document.getElementById('btn-relatorio-epis').addEventListener('click', () => gerarRelatorioEPIs());
             document.getElementById('btn-relatorio-estoque').addEventListener('click', () => gerarRelatorioEstoque());
             document.getElementById('btn-relatorio-entregas').addEventListener('click', () => gerarRelatorioEntregas());
             document.getElementById('btn-backup').addEventListener('click', () => fazerBackup());
             
-            // Event listeners para busca
+            // Event listeners para busca EPI
             document.getElementById('search-epi').addEventListener('input', filtrarEPIs);
             document.getElementById('search-estoque').addEventListener('input', filtrarEstoque);
             document.getElementById('search-entregas').addEventListener('input', filtrarEntregas);
@@ -1004,6 +1495,7 @@
             setInterval(atualizarStatusAutomatico, 60000);
         });
         
+        // ========== FUNÇÕES DO SISTEMA EPI ==========
         // Função para carregar dados do Firebase
         function carregarDadosFirebase() {
             console.log('Carregando dados do Firebase...');
@@ -1068,6 +1560,7 @@
             });
         }
 
+        // ... (Todas as outras funções do sistema EPI permanecem iguais)
         // Função para recalcular estoque
         function recalcularEstoque(epiId) {
             const itemEstoque = estoque.find(item => item.epiId === epiId);
@@ -2056,6 +2549,386 @@
             
             mostrarMensagem('Backup realizado com sucesso!');
         }
+
+        // ========== CÓDIGO DO SISTEMA 5W2H ==========
+        // Utility functions 5W2H
+        function formatarData5W2H(dataString) {
+            if (!dataString) return "Não definido";
+            const data = new Date(dataString + 'T00:00:00');
+            return data.toLocaleDateString('pt-BR');
+        }
+
+        function calcularStatus5W2H(acao) {
+            if (acao.status === "Realizado" || acao.priorizacao === "Realizado") return "concluido";
+            if (acao.fimReal) return "concluido";
+            
+            const hoje = new Date();
+            const fimPlanejado = acao.fimPlanejado ? new Date(acao.fimPlanejado + 'T00:00:00') : null;
+            
+            if (fimPlanejado && fimPlanejado < hoje) return "atrasado";
+            if (acao.inicio) return "em-andamento";
+            
+            return "em-andamento";
+        }
+
+        function showToast5W2H(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function openModal5W2H() {
+            document.getElementById('action-modal').style.display = 'flex';
+        }
+
+        function closeModal5W2H() {
+            document.getElementById('action-modal').style.display = 'none';
+            editingId = null;
+            document.getElementById('action-form').reset();
+            document.getElementById('modal-title').textContent = 'Nova Ação';
+        }
+
+        // Firebase functions 5W2H
+        function loadActionsFromFirebase() {
+            const actionsContainer = document.getElementById('actions-container');
+            actionsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><br><p>Carregando ações...</p></div>';
+            
+            const actionsRef = database.ref('5w2h/actions');
+            
+            actionsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                allActions = [];
+                
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        allActions.push({
+                            id: key,
+                            ...data[key]
+                        });
+                    });
+                }
+                
+                filteredActions = [...allActions];
+                renderizarAcoes5W2H(filteredActions);
+                updateFilters5W2H();
+                showToast5W2H('Dados carregados', 'success');
+            });
+        }
+
+        function saveActionToFirebase(actionData) {
+            const actionsRef = database.ref('5w2h/actions');
+            
+            // Calcular data fim planejada
+            if (actionData.inicio && actionData.prazo) {
+                const inicio = new Date(actionData.inicio + 'T00:00:00');
+                inicio.setDate(inicio.getDate() + parseInt(actionData.prazo));
+                actionData.fimPlanejado = inicio.toISOString().split('T')[0];
+            }
+
+            actionData.updatedAt = new Date().toISOString();
+
+            if (editingId) {
+                actionsRef.child(editingId).update(actionData)
+                    .then(() => {
+                        showToast5W2H('Ação atualizada', 'success');
+                        closeModal5W2H();
+                    })
+                    .catch((error) => {
+                        showToast5W2H('Erro ao atualizar', 'error');
+                    });
+            } else {
+                actionsRef.push(actionData)
+                    .then(() => {
+                        showToast5W2H('Ação criada', 'success');
+                        closeModal5W2H();
+                    })
+                    .catch((error) => {
+                        showToast5W2H('Erro ao criar', 'error');
+                    });
+            }
+        }
+
+        function deleteActionFromFirebase(actionId) {
+            if (confirm('Excluir esta ação?')) {
+                const actionRef = database.ref(`5w2h/actions/${actionId}`);
+                actionRef.remove()
+                    .then(() => {
+                        showToast5W2H('Ação excluída', 'success');
+                    })
+                    .catch((error) => {
+                        showToast5W2H('Erro ao excluir', 'error');
+                    });
+            }
+        }
+
+        // Render functions 5W2H
+        function renderizarAcoes5W2H(acoes) {
+            const container = document.getElementById('actions-container');
+            
+            if (acoes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nenhuma ação encontrada</h3>
+                        <p>Ajuste os filtros ou adicione uma nova ação.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            acoes.forEach(acao => {
+                const statusClass = calcularStatus5W2H(acao);
+                const actionItem = document.createElement('div');
+                actionItem.className = `action-item ${acao.priorizacao.toLowerCase()}`;
+                
+                actionItem.innerHTML = `
+                    <div class="action-header">
+                        <div class="action-title">${acao.what}</div>
+                        <div class="action-meta">
+                            <span class="badge badge-priority">${acao.priorizacao}</span>
+                            <span class="badge badge-status ${statusClass}">
+                                ${statusClass === 'concluido' ? 'Concluído' : 
+                                 statusClass === 'atrasado' ? 'Atrasado' : 
+                                 'Em Andamento'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-details">
+                        <div class="detail">
+                            <div class="detail-label">Por que</div>
+                            <div class="detail-value">${acao.why}</div>
+                        </div>
+                        <div class="detail">
+                            <div class="detail-label">Responsável</div>
+                            <div class="detail-value">${acao.who}</div>
+                        </div>
+                        <div class="detail">
+                            <div class="detail-label">Setor</div>
+                            <div class="detail-value">${acao.area}</div>
+                        </div>
+                        <div class="detail">
+                            <div class="detail-label">Prazo</div>
+                            <div class="detail-value">
+                                ${formatarData5W2H(acao.inicio)} → ${formatarData5W2H(acao.fimPlanejado)}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-footer">
+                        <div class="detail">
+                            <div class="detail-label">Como</div>
+                            <div class="detail-value">${acao.how || 'Não informado'}</div>
+                        </div>
+                        <div class="action-actions">
+                            <button class="btn btn-outline btn-sm" onclick="editAction5W2H('${acao.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="completeAction5W2H('${acao.id}')" title="Concluir">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAction5W2H('${acao.id}')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(actionItem);
+            });
+
+            atualizarEstatisticas5W2H(acoes);
+        }
+
+        function atualizarEstatisticas5W2H(acoes) {
+            document.getElementById('total-actions').textContent = acoes.length;
+            document.getElementById('in-progress').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'em-andamento').length;
+            document.getElementById('completed').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'concluido').length;
+            document.getElementById('overdue').textContent = acoes.filter(a => calcularStatus5W2H(a) === 'atrasado').length;
+        }
+
+        function updateFilters5W2H() {
+            const responsibleSelect = document.getElementById('filter-responsible');
+            const responsaveis = [...new Set(allActions.map(acao => acao.who))];
+            responsibleSelect.innerHTML = '<option value="all">Todos</option>';
+            responsaveis.forEach(responsavel => {
+                const option = document.createElement('option');
+                option.value = responsavel;
+                option.textContent = responsavel;
+                responsibleSelect.appendChild(option);
+            });
+
+            const areaSelect = document.getElementById('filter-area');
+            const areas = [...new Set(allActions.map(acao => acao.area))];
+            areaSelect.innerHTML = '<option value="all">Todos</option>';
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                areaSelect.appendChild(option);
+            });
+        }
+
+        function aplicarFiltros5W2H() {
+            const filtroPrioridade = document.getElementById('filter-priority').value;
+            const filtroResponsavel = document.getElementById('filter-responsible').value;
+            const filtroArea = document.getElementById('filter-area').value;
+            const filtroStatus = document.getElementById('filter-status').value;
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+
+            filteredActions = allActions.filter(acao => {
+                const passaPrioridade = filtroPrioridade === 'all' || acao.priorizacao === filtroPrioridade;
+                const passaResponsavel = filtroResponsavel === 'all' || acao.who === filtroResponsavel;
+                const passaArea = filtroArea === 'all' || acao.area === filtroArea;
+                const passaStatus = filtroStatus === 'all' || acao.status === filtroStatus;
+                const passaBusca = !searchTerm || 
+                    acao.what.toLowerCase().includes(searchTerm) ||
+                    acao.why.toLowerCase().includes(searchTerm) ||
+                    acao.who.toLowerCase().includes(searchTerm);
+                
+                return passaPrioridade && passaResponsavel && passaArea && passaStatus && passaBusca;
+            });
+
+            renderizarAcoes5W2H(filteredActions);
+        }
+
+        function clearFilters5W2H() {
+            document.getElementById('filter-priority').value = 'all';
+            document.getElementById('filter-responsible').value = 'all';
+            document.getElementById('filter-area').value = 'all';
+            document.getElementById('filter-status').value = 'all';
+            document.getElementById('search').value = '';
+            aplicarFiltros5W2H();
+        }
+
+        // Action functions 5W2H
+        function editAction5W2H(actionId) {
+            const action = allActions.find(a => a.id === actionId);
+            if (action) {
+                editingId = actionId;
+                document.getElementById('modal-title').textContent = 'Editar Ação';
+                
+                document.getElementById('form-what').value = action.what || '';
+                document.getElementById('form-why').value = action.why || '';
+                document.getElementById('form-who').value = action.who || '';
+                document.getElementById('form-area').value = action.area || '';
+                document.getElementById('form-where').value = action.where || '';
+                document.getElementById('form-inicio').value = action.inicio || '';
+                document.getElementById('form-prazo').value = action.prazo || '';
+                document.getElementById('form-custo').value = action.howMuch || '';
+                document.getElementById('form-priorizacao').value = action.priorizacao || 'Média';
+                document.getElementById('form-status').value = action.status || 'Em Execução';
+                document.getElementById('form-how').value = action.how || '';
+                
+                openModal5W2H();
+            }
+        }
+
+        function completeAction5W2H(actionId) {
+            const actionRef = database.ref(`5w2h/actions/${actionId}`);
+            const today = new Date().toISOString().split('T')[0];
+            
+            actionRef.update({
+                status: 'Realizado',
+                priorizacao: 'Realizado',
+                fimReal: today
+            })
+            .then(() => {
+                showToast5W2H('Ação concluída', 'success');
+            });
+        }
+
+        function deleteAction5W2H(actionId) {
+            deleteActionFromFirebase(actionId);
+        }
+
+        // PDF Generation 5W2H
+        function generatePDF5W2H() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(16);
+            doc.text('Relatório 5W2H - Plano de Ação', 20, 20);
+            
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
+            
+            const tableHeaders = [['O Que', 'Responsável', 'Setor', 'Prioridade', 'Status']];
+            const tableData = filteredActions.map(acao => [
+                acao.what.substring(0, 40) + (acao.what.length > 40 ? '...' : ''),
+                acao.who,
+                acao.area,
+                acao.priorizacao,
+                calcularStatus5W2H(acao)
+            ]);
+            
+            doc.autoTable({
+                startY: 40,
+                head: tableHeaders,
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 138, 247] },
+                styles: { fontSize: 8 }
+            });
+            
+            doc.save(`relatorio_5w2h_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast5W2H('PDF gerado', 'success');
+        }
+
+        // Event Listeners 5W2H
+        document.addEventListener('DOMContentLoaded', function() {
+            // 5W2H buttons
+            document.getElementById('btn-new-action').addEventListener('click', openModal5W2H);
+            document.getElementById('btn-apply-filters').addEventListener('click', aplicarFiltros5W2H);
+            document.getElementById('btn-clear-filters').addEventListener('click', clearFilters5W2H);
+
+            // 5W2H Modal buttons
+            document.getElementById('modal-close').addEventListener('click', closeModal5W2H);
+            document.getElementById('btn-cancel').addEventListener('click', closeModal5W2H);
+
+            // 5W2H Form submission
+            document.getElementById('action-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const actionData = {
+                    what: document.getElementById('form-what').value,
+                    why: document.getElementById('form-why').value,
+                    who: document.getElementById('form-who').value,
+                    area: document.getElementById('form-area').value,
+                    where: document.getElementById('form-where').value,
+                    inicio: document.getElementById('form-inicio').value,
+                    prazo: document.getElementById('form-prazo').value || null,
+                    howMuch: document.getElementById('form-custo').value || null,
+                    priorizacao: document.getElementById('form-priorizacao').value,
+                    status: document.getElementById('form-status').value,
+                    how: document.getElementById('form-how').value,
+                    updatedAt: new Date().toISOString()
+                };
+
+                saveActionToFirebase(actionData);
+            });
+
+            // 5W2H Search input
+            document.getElementById('search').addEventListener('input', aplicarFiltros5W2H);
+
+            // 5W2H Close modal on outside click
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal') && e.target.id === 'action-modal') {
+                    closeModal5W2H();
+                }
+            });
+        });
+
+        // Global functions 5W2H
+        window.editAction5W2H = editAction5W2H;
+        window.completeAction5W2H = completeAction5W2H;
+        window.deleteAction5W2H = deleteAction5W2H;
     </script>
 </body>
 </html>
