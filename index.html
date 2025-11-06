@@ -1552,30 +1552,41 @@ const firebaseConfig = {
     this.setupRealTimeListeners(); // NOVO: Configurar listeners em tempo real
 },
 
-            // Configurar usuários padrão
-            async setupDefaultUsers() {
-                this.users = await Storage.loadUsers();
-                if (this.users.length === 0) {
-                    // Usuário administrador padrão
-                    this.users = [
-                        {
-                            id: 'admin',
-                            name: 'Administrador',
-                            username: 'admin',
-                            password: 'admin123',
-                            role: 'admin',
-                            setor: 'ambos',
-                            createdAt: new Date().toISOString(),
-                            active: true
-                        }
-                    ];
-                    await Storage.saveUsers(this.users);
-                }
-            },
+            // Configurar usuários padrão - CORRIGIDO
+async setupDefaultUsers() {
+    try {
+        this.users = await Storage.loadUsers();
+        
+        // Verificar se já existe o usuário admin
+        const adminExists = this.users.some(user => 
+            user.username === 'admin' && user.active !== false
+        );
+        
+        if (!adminExists) {
+            // Usuário administrador padrão apenas se não existir
+            const defaultAdmin = {
+                id: 'admin',
+                name: 'Administrador',
+                username: 'admin',
+                password: 'admin123',
+                role: 'admin',
+                setor: 'ambos',
+                createdAt: new Date().toISOString(),
+                active: true
+            };
+            
+            this.users.push(defaultAdmin);
+            await Storage.saveUsers(this.users);
+            console.log('Usuário admin padrão criado');
+        }
+    } catch (error) {
+        console.error('Erro ao configurar usuários padrão:', error);
+    }
+},
 
-            // Configurar dados padrão
-            async setupDefaultData() {
-                // Carregar dados iniciais apenas uma vez
+            // Configurar dados padrão - CORRIGIDO
+async setupDefaultData() {
+    // Carregar dados iniciais apenas uma vez
     try {
         this.showLoading(true);
         
@@ -1610,12 +1621,12 @@ const firebaseConfig = {
         this.showLoading(false);
     }
     
-    // Configurar dados padrão se necessário
+    // Configurar dados padrão apenas se necessário (estoque vazio)
     if (this.stock.length === 0) {
-        // Dados de exemplo para estoque
-        this.stock = [
+        console.log('Criando dados de estoque padrão...');
+        const defaultStock = [
             {
-                id: '1',
+                id: Storage.generateId(),
                 epiName: 'Capacete de Segurança',
                 quantity: 50,
                 minQuantity: 20,
@@ -1623,7 +1634,7 @@ const firebaseConfig = {
                 createdAt: new Date().toISOString()
             },
             {
-                id: '2',
+                id: Storage.generateId(),
                 epiName: 'Luvas de Proteção',
                 quantity: 100,
                 minQuantity: 50,
@@ -1631,7 +1642,7 @@ const firebaseConfig = {
                 createdAt: new Date().toISOString()
             },
             {
-                id: '3',
+                id: Storage.generateId(),
                 epiName: 'Botina de Segurança',
                 quantity: 30,
                 minQuantity: 25,
@@ -1639,7 +1650,11 @@ const firebaseConfig = {
                 createdAt: new Date().toISOString()
             }
         ];
+        
+        this.stock = defaultStock;
         await Storage.saveStock(this.stock);
+        this.renderStockTable();
+        console.log('Dados de estoque padrão criados');
     }
 },
 
