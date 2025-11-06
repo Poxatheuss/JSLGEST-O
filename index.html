@@ -1047,6 +1047,16 @@
 
         <!-- Sistema 5W2H -->
         <div class="system-content" id="w2h-system">
+            <!-- Seletor de Setor para 5W2H -->
+            <div class="setor-selector">
+                <button class="setor-btn motorizada active" data-setor="motorizada">
+                    <i class="fas fa-motorcycle"></i> Motorizada
+                </button>
+                <button class="setor-btn canteiro" data-setor="canteiro">
+                    <i class="fas fa-tools"></i> Canteiro
+                </button>
+            </div>
+
             <div class="actions">
                 <button class="btn btn-primary" id="add-action-btn">
                     <i class="fas fa-plus"></i> Nova Ação
@@ -1271,6 +1281,14 @@
                         </select>
                     </div>
                 </div>
+                <!-- CORREÇÃO: Adicionado campo para definir o setor da ação -->
+                <div class="form-group">
+                    <label for="action-setor">Setor</label>
+                    <select id="action-setor" class="input" required>
+                        <option value="motorizada">Motorizada</option>
+                        <option value="canteiro">Canteiro</option>
+                    </select>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn" id="cancel-action" style="background: #6c757d; color: white;">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar Ação</button>
@@ -1334,15 +1352,15 @@
 
     <script>
         // Configuração do Firebase - CONFIGURAÇÕES CORRETAS
-const firebaseConfig = {
-    apiKey: "AIzaSyC7lfkugq0bnh0vfbkpu-ZSAvrlvUi-Uos",
-    authDomain: "controleepi-6ccc3.firebaseapp.com",
-    projectId: "controleepi-6ccc3",
-    storageBucket: "controleepi-6ccc3.firebasestorage.app",
-    messagingSenderId: "450700628483",
-    appId: "1:450700628483:web:3a5409173a41bb6a307436",
-    measurementId: "G-JX1EMWWFD6"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7lfkugq0bnh0vfbkpu-ZSAvrlvUi-Uos",
+            authDomain: "controleepi-6ccc3.firebaseapp.com",
+            projectId: "controleepi-6ccc3",
+            storageBucket: "controleepi-6ccc3.firebasestorage.app",
+            messagingSenderId: "450700628483",
+            appId: "1:450700628483:web:3a5409173a41bb6a307436",
+            measurementId: "G-JX1EMWWFD6"
+        };
 
         // Inicializar Firebase
         try {
@@ -1354,180 +1372,180 @@ const firebaseConfig = {
 
         // Sistema de armazenamento com Firebase
         const Storage = {
-    listeners: {},
-    
-    // Usuários
-    async saveUsers(users) {
-        try {
-            await db.collection('appData').doc('users').set({ data: users });
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar usuários:', error);
-            return false;
-        }
-    },
-
-    async loadUsers() {
-        try {
-            const doc = await db.collection('appData').doc('users').get();
-            return doc.exists ? doc.data().data : [];
-        } catch (error) {
-            console.error('Erro ao carregar usuários:', error);
-            return [];
-        }
-    },
-
-    setupUsersListener(callback) {
-        this.listeners.users = db.collection('appData').doc('users')
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    callback(doc.data().data);
+            listeners: {},
+            
+            // Usuários
+            async saveUsers(users) {
+                try {
+                    await db.collection('appData').doc('users').set({ data: users });
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar usuários:', error);
+                    return false;
                 }
-            }, (error) => {
-                console.error('Erro no listener de usuários:', error);
-            });
-    },
+            },
 
-    // EPIs
-    async saveEpis(epis) {
-        try {
-            await db.collection('appData').doc('epis').set({ data: epis });
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar EPIs:', error);
-            return false;
-        }
-    },
-
-    async loadEpis() {
-        try {
-            const doc = await db.collection('appData').doc('epis').get();
-            return doc.exists ? doc.data().data : [];
-        } catch (error) {
-            console.error('Erro ao carregar EPIs:', error);
-            return [];
-        }
-    },
-
-    setupEpisListener(callback) {
-        this.listeners.epis = db.collection('appData').doc('epis')
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    callback(doc.data().data);
+            async loadUsers() {
+                try {
+                    const doc = await db.collection('appData').doc('users').get();
+                    return doc.exists ? doc.data().data : [];
+                } catch (error) {
+                    console.error('Erro ao carregar usuários:', error);
+                    return [];
                 }
-            }, (error) => {
-                console.error('Erro no listener de EPIs:', error);
-            });
-    },
+            },
 
-    // Estoque
-    async saveStock(stock) {
-        try {
-            await db.collection('appData').doc('stock').set({ data: stock });
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar estoque:', error);
-            return false;
-        }
-    },
+            setupUsersListener(callback) {
+                this.listeners.users = db.collection('appData').doc('users')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            callback(doc.data().data);
+                        }
+                    }, (error) => {
+                        console.error('Erro no listener de usuários:', error);
+                    });
+            },
 
-    async loadStock() {
-        try {
-            const doc = await db.collection('appData').doc('stock').get();
-            return doc.exists ? doc.data().data : [];
-        } catch (error) {
-            console.error('Erro ao carregar estoque:', error);
-            return [];
-        }
-    },
-
-    setupStockListener(callback) {
-        this.listeners.stock = db.collection('appData').doc('stock')
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    callback(doc.data().data);
+            // EPIs
+            async saveEpis(epis) {
+                try {
+                    await db.collection('appData').doc('epis').set({ data: epis });
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar EPIs:', error);
+                    return false;
                 }
-            }, (error) => {
-                console.error('Erro no listener de estoque:', error);
-            });
-    },
+            },
 
-    // Entregas
-    async saveDeliveries(deliveries) {
-        try {
-            await db.collection('appData').doc('deliveries').set({ data: deliveries });
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar entregas:', error);
-            return false;
-        }
-    },
-
-    async loadDeliveries() {
-        try {
-            const doc = await db.collection('appData').doc('deliveries').get();
-            return doc.exists ? doc.data().data : [];
-        } catch (error) {
-            console.error('Erro ao carregar entregas:', error);
-            return [];
-        }
-    },
-
-    setupDeliveriesListener(callback) {
-        this.listeners.deliveries = db.collection('appData').doc('deliveries')
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    callback(doc.data().data);
+            async loadEpis() {
+                try {
+                    const doc = await db.collection('appData').doc('epis').get();
+                    return doc.exists ? doc.data().data : [];
+                } catch (error) {
+                    console.error('Erro ao carregar EPIs:', error);
+                    return [];
                 }
-            }, (error) => {
-                console.error('Erro no listener de entregas:', error);
-            });
-    },
+            },
 
-    // Ações
-    async saveActions(actions) {
-        try {
-            await db.collection('appData').doc('actions').set({ data: actions });
-            return true;
-        } catch (error) {
-            console.error('Erro ao salvar ações:', error);
-            return false;
-        }
-    },
+            setupEpisListener(callback) {
+                this.listeners.epis = db.collection('appData').doc('epis')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            callback(doc.data().data);
+                        }
+                    }, (error) => {
+                        console.error('Erro no listener de EPIs:', error);
+                    });
+            },
 
-    async loadActions() {
-        try {
-            const doc = await db.collection('appData').doc('actions').get();
-            return doc.exists ? doc.data().data : [];
-        } catch (error) {
-            console.error('Erro ao carregar ações:', error);
-            return [];
-        }
-    },
-
-    setupActionsListener(callback) {
-        this.listeners.actions = db.collection('appData').doc('actions')
-            .onSnapshot((doc) => {
-                if (doc.exists) {
-                    callback(doc.data().data);
+            // Estoque
+            async saveStock(stock) {
+                try {
+                    await db.collection('appData').doc('stock').set({ data: stock });
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar estoque:', error);
+                    return false;
                 }
-            }, (error) => {
-                console.error('Erro no listener de ações:', error);
-            });
-    },
+            },
 
-    // Remover todos os listeners
-    removeAllListeners() {
-        Object.values(this.listeners).forEach(unsubscribe => {
-            if (unsubscribe) unsubscribe();
-        });
-        this.listeners = {};
-    },
+            async loadStock() {
+                try {
+                    const doc = await db.collection('appData').doc('stock').get();
+                    return doc.exists ? doc.data().data : [];
+                } catch (error) {
+                    console.error('Erro ao carregar estoque:', error);
+                    return [];
+                }
+            },
 
-    generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-};
+            setupStockListener(callback) {
+                this.listeners.stock = db.collection('appData').doc('stock')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            callback(doc.data().data);
+                        }
+                    }, (error) => {
+                        console.error('Erro no listener de estoque:', error);
+                    });
+            },
+
+            // Entregas
+            async saveDeliveries(deliveries) {
+                try {
+                    await db.collection('appData').doc('deliveries').set({ data: deliveries });
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar entregas:', error);
+                    return false;
+                }
+            },
+
+            async loadDeliveries() {
+                try {
+                    const doc = await db.collection('appData').doc('deliveries').get();
+                    return doc.exists ? doc.data().data : [];
+                } catch (error) {
+                    console.error('Erro ao carregar entregas:', error);
+                    return [];
+                }
+            },
+
+            setupDeliveriesListener(callback) {
+                this.listeners.deliveries = db.collection('appData').doc('deliveries')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            callback(doc.data().data);
+                        }
+                    }, (error) => {
+                        console.error('Erro no listener de entregas:', error);
+                    });
+            },
+
+            // Ações
+            async saveActions(actions) {
+                try {
+                    await db.collection('appData').doc('actions').set({ data: actions });
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar ações:', error);
+                    return false;
+                }
+            },
+
+            async loadActions() {
+                try {
+                    const doc = await db.collection('appData').doc('actions').get();
+                    return doc.exists ? doc.data().data : [];
+                } catch (error) {
+                    console.error('Erro ao carregar ações:', error);
+                    return [];
+                }
+            },
+
+            setupActionsListener(callback) {
+                this.listeners.actions = db.collection('appData').doc('actions')
+                    .onSnapshot((doc) => {
+                        if (doc.exists) {
+                            callback(doc.data().data);
+                        }
+                    }, (error) => {
+                        console.error('Erro no listener de ações:', error);
+                    });
+            },
+
+            // Remover todos os listeners
+            removeAllListeners() {
+                Object.values(this.listeners).forEach(unsubscribe => {
+                    if (unsubscribe) unsubscribe();
+                });
+                this.listeners = {};
+            },
+
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+        };
 
         // Estado da aplicação
         const AppState = {
@@ -1544,119 +1562,119 @@ const firebaseConfig = {
             actions: [],
 
             // Inicializar
-           async init() {
-    await this.setupDefaultUsers();
-    this.loadUserData();
-    this.setupEventListeners();
-    await this.setupDefaultData();
-    this.setupRealTimeListeners(); // NOVO: Configurar listeners em tempo real
-},
-
-            // Configurar usuários padrão - CORRIGIDO
-async setupDefaultUsers() {
-    try {
-        this.users = await Storage.loadUsers();
-        
-        // Verificar se já existe o usuário admin
-        const adminExists = this.users.some(user => 
-            user.username === 'admin' && user.active !== false
-        );
-        
-        if (!adminExists) {
-            // Usuário administrador padrão apenas se não existir
-            const defaultAdmin = {
-                id: 'admin',
-                name: 'Administrador',
-                username: 'admin',
-                password: 'admin123',
-                role: 'admin',
-                setor: 'ambos',
-                createdAt: new Date().toISOString(),
-                active: true
-            };
-            
-            this.users.push(defaultAdmin);
-            await Storage.saveUsers(this.users);
-            console.log('Usuário admin padrão criado');
-        }
-    } catch (error) {
-        console.error('Erro ao configurar usuários padrão:', error);
-    }
-},
-
-            // Configurar dados padrão - CORRIGIDO
-async setupDefaultData() {
-    // Carregar dados iniciais apenas uma vez
-    try {
-        this.showLoading(true);
-        
-        const [users, epis, stock, deliveries, actions] = await Promise.all([
-            Storage.loadUsers(),
-            Storage.loadEpis(),
-            Storage.loadStock(),
-            Storage.loadDeliveries(),
-            Storage.loadActions()
-        ]);
-        
-        this.users = users;
-        this.epis = epis;
-        this.stock = stock;
-        this.deliveries = deliveries;
-        this.actions = actions;
-        
-        // Renderizar dados iniciais
-        this.renderEPITable();
-        this.renderStockTable();
-        this.renderDeliveryTable();
-        this.renderActionsList();
-        this.renderUsersList();
-        this.updateDashboard();
-        this.updateReportsStats();
-        this.updateAdminStats();
-        
-    } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        this.showToast('Erro ao carregar dados do servidor', 'error');
-    } finally {
-        this.showLoading(false);
-    }
-    
-    // Configurar dados padrão apenas se necessário (estoque vazio)
-    if (this.stock.length === 0) {
-        console.log('Criando dados de estoque padrão...');
-        const defaultStock = [
-            {
-                id: Storage.generateId(),
-                epiName: 'Capacete de Segurança',
-                quantity: 50,
-                minQuantity: 20,
-                setor: 'motorizada',
-                createdAt: new Date().toISOString()
+            async init() {
+                await this.setupDefaultUsers();
+                this.loadUserData();
+                this.setupEventListeners();
+                await this.setupDefaultData();
+                this.setupRealTimeListeners();
             },
-            {
-                id: Storage.generateId(),
-                epiName: 'Luvas de Proteção',
-                quantity: 100,
-                minQuantity: 50,
-                setor: 'motorizada',
-                createdAt: new Date().toISOString()
+
+            // Configurar usuários padrão
+            async setupDefaultUsers() {
+                try {
+                    this.users = await Storage.loadUsers();
+                    
+                    // Verificar se já existe o usuário admin
+                    const adminExists = this.users.some(user => 
+                        user.username === 'admin' && user.active !== false
+                    );
+                    
+                    if (!adminExists) {
+                        // Usuário administrador padrão apenas se não existir
+                        const defaultAdmin = {
+                            id: 'admin',
+                            name: 'Administrador',
+                            username: 'admin',
+                            password: 'admin123',
+                            role: 'admin',
+                            setor: 'ambos',
+                            createdAt: new Date().toISOString(),
+                            active: true
+                        };
+                        
+                        this.users.push(defaultAdmin);
+                        await Storage.saveUsers(this.users);
+                        console.log('Usuário admin padrão criado');
+                    }
+                } catch (error) {
+                    console.error('Erro ao configurar usuários padrão:', error);
+                }
             },
-            {
-                id: Storage.generateId(),
-                epiName: 'Botina de Segurança',
-                quantity: 30,
-                minQuantity: 25,
-                setor: 'canteiro',
-                createdAt: new Date().toISOString()
-            }
-        ];
-        
-        this.stock = defaultStock;
-        await Storage.saveStock(this.stock);
-        this.renderStockTable();
-        console.log('Dados de estoque padrão criados');
-    }
-},
+
+            // Configurar dados padrão
+            async setupDefaultData() {
+                // Carregar dados iniciais apenas uma vez
+                try {
+                    this.showLoading(true);
+                    
+                    const [users, epis, stock, deliveries, actions] = await Promise.all([
+                        Storage.loadUsers(),
+                        Storage.loadEpis(),
+                        Storage.loadStock(),
+                        Storage.loadDeliveries(),
+                        Storage.loadActions()
+                    ]);
+                    
+                    this.users = users;
+                    this.epis = epis;
+                    this.stock = stock;
+                    this.deliveries = deliveries;
+                    this.actions = actions;
+                    
+                    // Renderizar dados iniciais
+                    this.renderEPITable();
+                    this.renderStockTable();
+                    this.renderDeliveryTable();
+                    this.renderActionsList();
+                    this.renderUsersList();
+                    this.updateDashboard();
+                    this.updateReportsStats();
+                    this.updateAdminStats();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar dados iniciais:', error);
+                    this.showToast('Erro ao carregar dados do servidor', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+                
+                // Configurar dados padrão apenas se necessário (estoque vazio)
+                if (this.stock.length === 0) {
+                    console.log('Criando dados de estoque padrão...');
+                    const defaultStock = [
+                        {
+                            id: Storage.generateId(),
+                            epiName: 'Capacete de Segurança',
+                            quantity: 50,
+                            minQuantity: 20,
+                            setor: 'motorizada',
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: Storage.generateId(),
+                            epiName: 'Luvas de Proteção',
+                            quantity: 100,
+                            minQuantity: 50,
+                            setor: 'motorizada',
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            id: Storage.generateId(),
+                            epiName: 'Botina de Segurança',
+                            quantity: 30,
+                            minQuantity: 25,
+                            setor: 'canteiro',
+                            createdAt: new Date().toISOString()
+                        }
+                    ];
+                    
+                    this.stock = defaultStock;
+                    await Storage.saveStock(this.stock);
+                    this.renderStockTable();
+                    console.log('Dados de estoque padrão criados');
+                }
+            },
 
             // Carregar dados do usuário
             loadUserData() {
@@ -1732,54 +1750,56 @@ async setupDefaultData() {
                 document.getElementById('stock-search-btn').addEventListener('click', () => this.searchStock());
                 document.getElementById('delivery-search-btn').addEventListener('click', () => this.searchDeliveries());
             },
-// NOVO: Configurar listeners em tempo real
-setupRealTimeListeners() {
-    // Listener para usuários
-    Storage.setupUsersListener((users) => {
-        this.users = users;
-        this.renderUsersList();
-        this.updateAdminStats();
-        console.log('Usuários atualizados em tempo real');
-    });
 
-    // Listener para EPIs
-    Storage.setupEpisListener((epis) => {
-        this.epis = epis;
-        this.renderEPITable();
-        this.updateDashboard();
-        this.updateReportsStats();
-        console.log('EPIs atualizados em tempo real');
-    });
+            // Configurar listeners em tempo real
+            setupRealTimeListeners() {
+                // Listener para usuários
+                Storage.setupUsersListener((users) => {
+                    this.users = users;
+                    this.renderUsersList();
+                    this.updateAdminStats();
+                    console.log('Usuários atualizados em tempo real');
+                });
 
-    // Listener para estoque
-    Storage.setupStockListener((stock) => {
-        this.stock = stock;
-        this.renderStockTable();
-        this.updateDashboard();
-        console.log('Estoque atualizado em tempo real');
-    });
+                // Listener para EPIs
+                Storage.setupEpisListener((epis) => {
+                    this.epis = epis;
+                    this.renderEPITable();
+                    this.updateDashboard();
+                    this.updateReportsStats();
+                    console.log('EPIs atualizados em tempo real');
+                });
 
-    // Listener para entregas
-    Storage.setupDeliveriesListener((deliveries) => {
-        this.deliveries = deliveries;
-        this.renderDeliveryTable();
-        console.log('Entregas atualizadas em tempo real');
-    });
+                // Listener para estoque
+                Storage.setupStockListener((stock) => {
+                    this.stock = stock;
+                    this.renderStockTable();
+                    this.updateDashboard();
+                    console.log('Estoque atualizado em tempo real');
+                });
 
-    // Listener para ações
-    Storage.setupActionsListener((actions) => {
-        this.actions = actions;
-        this.renderActionsList();
-        this.updateDashboard();
-        console.log('Ações atualizadas em tempo real');
-    });
-},
+                // Listener para entregas
+                Storage.setupDeliveriesListener((deliveries) => {
+                    this.deliveries = deliveries;
+                    this.renderDeliveryTable();
+                    console.log('Entregas atualizadas em tempo real');
+                });
+
+                // Listener para ações
+                Storage.setupActionsListener((actions) => {
+                    this.actions = actions;
+                    this.renderActionsList();
+                    this.updateDashboard();
+                    console.log('Ações atualizadas em tempo real');
+                });
+            },
+
             // MOSTRAR/OCULTAR LOADING
             showLoading(show) {
                 document.getElementById('loading').style.display = show ? 'flex' : 'none';
             },
 
-            // Login - CORRIGIDO
+            // Login
             handleLogin() {
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
@@ -1796,7 +1816,6 @@ setupRealTimeListeners() {
 
                     this.currentUser = user.username;
                     this.currentSetor = setor;
-                    // CORREÇÃO: Carregar role do usuário do banco de dados
                     this.currentUserRole = user.role;
                     
                     localStorage.setItem('currentUser', user.username);
@@ -1813,19 +1832,19 @@ setupRealTimeListeners() {
             // Logout
             handleLogout() {
                 // Remover listeners do Firebase
-    Storage.removeAllListeners();
-    
-    this.currentUser = null;
-    this.currentSetor = null;
-    this.currentUserRole = 'user';
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('currentSetor');
-    localStorage.removeItem('currentUserRole');
-    this.showLogin();
-    this.showToast('Logout realizado!');
-},
+                Storage.removeAllListeners();
+                
+                this.currentUser = null;
+                this.currentSetor = null;
+                this.currentUserRole = 'user';
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentSetor');
+                localStorage.removeItem('currentUserRole');
+                this.showLogin();
+                this.showToast('Logout realizado!');
+            },
 
-            // Mostrar aplicação principal - CORRIGIDO
+            // Mostrar aplicação principal
             showMainApp() {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-container').style.display = 'block';
@@ -1838,7 +1857,6 @@ setupRealTimeListeners() {
                 document.getElementById('current-setor-display').textContent = this.currentSetor;
                 document.getElementById('user-avatar').textContent = (currentUserData?.name || this.currentUser).substring(0, 2).toUpperCase();
                 
-                // CORREÇÃO CRÍTICA: Atualizar role baseado no usuário atual do banco de dados
                 this.currentUserRole = currentUserData?.role || 'user';
                 document.getElementById('user-role').textContent = this.currentUserRole === 'admin' ? 'Administrador' : 'Usuário';
                 
@@ -1846,7 +1864,7 @@ setupRealTimeListeners() {
                 const setorElement = document.getElementById('current-setor');
                 setorElement.className = `setor-info setor-${this.currentSetor}`;
                 
-                // CORREÇÃO: Mostrar/ocultar aba de administração baseado no role REAL do usuário
+                // Mostrar/ocultar aba de administração baseado no role REAL do usuário
                 const adminTab = document.getElementById('admin-tab');
                 if (this.currentUserRole === 'admin') {
                     adminTab.style.display = 'flex';
@@ -1868,16 +1886,18 @@ setupRealTimeListeners() {
             // Atualizar seletor de setor baseado no acesso do usuário
             updateSetorSelector() {
                 const currentUserData = this.users.find(u => u.username === this.currentUser);
-                const setorSelector = document.querySelector('.setor-selector');
+                const setorSelector = document.querySelectorAll('.setor-selector');
                 
-                if (currentUserData?.setor === 'ambos') {
-                    setorSelector.style.display = 'flex';
-                } else {
-                    setorSelector.style.display = 'none';
-                    // Definir setor fixo para usuários com acesso restrito
-                    this.currentSetor = currentUserData?.setor || 'motorizada';
-                    this.switchSetor(this.currentSetor);
-                }
+                setorSelector.forEach(selector => {
+                    if (currentUserData?.setor === 'ambos') {
+                        selector.style.display = 'flex';
+                    } else {
+                        selector.style.display = 'none';
+                        // Definir setor fixo para usuários com acesso restrito
+                        this.currentSetor = currentUserData?.setor || 'motorizada';
+                        this.switchSetor(this.currentSetor);
+                    }
+                });
             },
 
             // Mostrar login
@@ -1888,7 +1908,7 @@ setupRealTimeListeners() {
 
             // Trocar sistema
             switchSystem(system) {
-                // CORREÇÃO: Verificar permissão para acessar admin
+                // Verificar permissão para acessar admin
                 if (system === 'admin' && this.currentUserRole !== 'admin') {
                     this.showToast('Acesso negado! Você não tem permissão para acessar a administração.', 'error');
                     return;
@@ -1934,7 +1954,9 @@ setupRealTimeListeners() {
                 document.querySelectorAll('.setor-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                document.querySelector(`[data-setor="${setor}"]`).classList.add('active');
+                document.querySelectorAll(`[data-setor="${setor}"]`).forEach(btn => {
+                    btn.classList.add('active');
+                });
                 
                 // Atualizar interface
                 document.getElementById('current-setor').textContent = setor;
@@ -1946,6 +1968,8 @@ setupRealTimeListeners() {
                 this.renderEPITable();
                 this.renderStockTable();
                 this.renderDeliveryTable();
+                // CORREÇÃO: Recarregar ações ao trocar setor
+                this.renderActionsList();
             },
 
             // Abrir modal EPI
@@ -2027,7 +2051,7 @@ setupRealTimeListeners() {
                 });
             },
 
-            // Abrir modal ação
+            // Abrir modal ação - CORREÇÃO: Adicionar setor atual
             openActionModal(actionId = null) {
                 this.editingId = actionId;
                 const modal = document.getElementById('action-modal');
@@ -2047,6 +2071,8 @@ setupRealTimeListeners() {
                         document.getElementById('how-much').value = action.howMuch || '';
                         document.getElementById('action-priority').value = action.priority;
                         document.getElementById('action-status').value = action.status;
+                        // CORREÇÃO: Definir o setor da ação
+                        document.getElementById('action-setor').value = action.setor || this.currentSetor;
                     }
                 } else {
                     document.getElementById('action-modal-title').textContent = 'Nova Ação';
@@ -2054,6 +2080,8 @@ setupRealTimeListeners() {
                     document.getElementById('start-date').value = this.getTodayDate();
                     document.getElementById('deadline-days').value = 7;
                     document.getElementById('action-status').value = 'pendente';
+                    // CORREÇÃO: Definir setor padrão como o setor atual
+                    document.getElementById('action-setor').value = this.currentSetor;
                 }
                 
                 modal.style.display = 'flex';
@@ -2202,7 +2230,7 @@ setupRealTimeListeners() {
                 this.closeModal('delivery');
             },
 
-            // Manipular ação
+            // Manipular ação - CORREÇÃO: Incluir setor no formulário
             async handleActionSubmit(e) {
                 e.preventDefault();
                 
@@ -2217,6 +2245,8 @@ setupRealTimeListeners() {
                     howMuch: document.getElementById('how-much').value,
                     priority: document.getElementById('action-priority').value,
                     status: document.getElementById('action-status').value,
+                    // CORREÇÃO: Incluir o setor da ação
+                    setor: document.getElementById('action-setor').value,
                     updatedAt: new Date().toISOString()
                 };
                 
@@ -2245,7 +2275,7 @@ setupRealTimeListeners() {
                 this.closeModal('action');
             },
 
-            // Manipular usuário - CORRIGIDO
+            // Manipular usuário
             async handleUserSubmit(e) {
                 e.preventDefault();
                 
@@ -2267,7 +2297,7 @@ setupRealTimeListeners() {
                     updatedAt: new Date().toISOString()
                 };
                 
-                // CORREÇÃO: Verificar se username já existe (apenas usuários ativos)
+                // Verificar se username já existe (apenas usuários ativos)
                 const existingUser = this.users.find(u => 
                     u.username === formData.username && 
                     u.id !== this.editingId && 
@@ -2430,15 +2460,18 @@ setupRealTimeListeners() {
                 }).join('');
             },
 
-            // Renderizar lista de ações
+            // Renderizar lista de ações - CORREÇÃO: Filtrar por setor
             renderActionsList() {
                 const container = document.getElementById('actions-list');
                 
-                if (this.actions.length === 0) {
+                // CORREÇÃO: Filtrar ações pelo setor atual
+                const filteredActions = this.actions.filter(action => action.setor === this.currentSetor);
+                
+                if (filteredActions.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 40px; background: white; border-radius: 12px;">
                             <i class="fas fa-tasks" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;"></i>
-                            <p>Nenhuma ação cadastrada</p>
+                            <p>Nenhuma ação cadastrada para o setor ${this.currentSetor}</p>
                             <button class="btn btn-primary" onclick="AppState.openActionModal()" style="margin-top: 15px;">
                                 <i class="fas fa-plus"></i> Criar Primeira Ação
                             </button>
@@ -2447,7 +2480,7 @@ setupRealTimeListeners() {
                     return;
                 }
                 
-                container.innerHTML = this.actions.map(action => {
+                container.innerHTML = filteredActions.map(action => {
                     const status = this.getActionStatus(action);
                     const statusClass = this.getActionStatusClass(status);
                     const priorityClass = action.priority === 'alta' ? 'status-expired' : 
@@ -2460,6 +2493,7 @@ setupRealTimeListeners() {
                                 <div class="action-meta">
                                     <span class="status-badge ${priorityClass}">${action.priority.toUpperCase()}</span>
                                     <span class="status-badge ${statusClass}">${status.toUpperCase()}</span>
+                                    <span class="badge-setor badge-${action.setor}">${action.setor}</span>
                                 </div>
                             </div>
                             <div class="action-details">
@@ -2885,7 +2919,7 @@ setupRealTimeListeners() {
                 doc.setFontSize(10);
                 doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
                 
-                const tableColumn = ["O Que", "Responsável", "Início", "Prazo", "Prioridade", "Status"];
+                const tableColumn = ["O Que", "Responsável", "Início", "Prazo", "Prioridade", "Status", "Setor"];
                 const tableRows = this.actions.map(action => {
                     const status = this.getActionStatus(action);
                     
@@ -2895,7 +2929,8 @@ setupRealTimeListeners() {
                         this.formatDate(action.startDate),
                         this.formatDate(action.deadlineDate),
                         action.priority,
-                        status
+                        status,
+                        action.setor
                     ];
                 });
                 
