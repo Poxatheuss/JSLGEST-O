@@ -1333,14 +1333,15 @@
     </div>
 
     <script>
-        // Configuração do Firebase
+        // Configuração do Firebase - CONFIGURAÇÕES CORRETAS
 const firebaseConfig = {
-    apiKey: "AIzaSyDmZfB2QfL9G6qY7w8XbHjKpLmNtRvW6Uc",
+    apiKey: "AIzaSyC7lfkugq0bnh0vfbkpu-ZSAvrlvUi-Uos",
     authDomain: "controleepi-6ccc3.firebaseapp.com",
     projectId: "controleepi-6ccc3",
-    storageBucket: "controleepi-6ccc3.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    storageBucket: "controleepi-6ccc3.firebasestorage.app",
+    messagingSenderId: "450700628483",
+    appId: "1:450700628483:web:3a5409173a41bb6a307436",
+    measurementId: "G-JX1EMWWFD6"
 };
 
         // Inicializar Firebase
@@ -1353,115 +1354,180 @@ const firebaseConfig = {
 
         // Sistema de armazenamento com Firebase
         const Storage = {
-            // Usuários
-            async saveUsers(users) {
-                try {
-                    await db.collection('appData').doc('users').set({ data: users });
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar usuários:', error);
-                    return false;
-                }
-            },
+    listeners: {},
+    
+    // Usuários
+    async saveUsers(users) {
+        try {
+            await db.collection('appData').doc('users').set({ data: users });
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar usuários:', error);
+            return false;
+        }
+    },
 
-            async loadUsers() {
-                try {
-                    const doc = await db.collection('appData').doc('users').get();
-                    return doc.exists ? doc.data().data : [];
-                } catch (error) {
-                    console.error('Erro ao carregar usuários:', error);
-                    return [];
-                }
-            },
+    async loadUsers() {
+        try {
+            const doc = await db.collection('appData').doc('users').get();
+            return doc.exists ? doc.data().data : [];
+        } catch (error) {
+            console.error('Erro ao carregar usuários:', error);
+            return [];
+        }
+    },
 
-            // EPIs
-            async saveEpis(epis) {
-                try {
-                    await db.collection('appData').doc('epis').set({ data: epis });
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar EPIs:', error);
-                    return false;
+    setupUsersListener(callback) {
+        this.listeners.users = db.collection('appData').doc('users')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    callback(doc.data().data);
                 }
-            },
+            }, (error) => {
+                console.error('Erro no listener de usuários:', error);
+            });
+    },
 
-            async loadEpis() {
-                try {
-                    const doc = await db.collection('appData').doc('epis').get();
-                    return doc.exists ? doc.data().data : [];
-                } catch (error) {
-                    console.error('Erro ao carregar EPIs:', error);
-                    return [];
+    // EPIs
+    async saveEpis(epis) {
+        try {
+            await db.collection('appData').doc('epis').set({ data: epis });
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar EPIs:', error);
+            return false;
+        }
+    },
+
+    async loadEpis() {
+        try {
+            const doc = await db.collection('appData').doc('epis').get();
+            return doc.exists ? doc.data().data : [];
+        } catch (error) {
+            console.error('Erro ao carregar EPIs:', error);
+            return [];
+        }
+    },
+
+    setupEpisListener(callback) {
+        this.listeners.epis = db.collection('appData').doc('epis')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    callback(doc.data().data);
                 }
-            },
+            }, (error) => {
+                console.error('Erro no listener de EPIs:', error);
+            });
+    },
 
-            // Estoque
-            async saveStock(stock) {
-                try {
-                    await db.collection('appData').doc('stock').set({ data: stock });
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar estoque:', error);
-                    return false;
+    // Estoque
+    async saveStock(stock) {
+        try {
+            await db.collection('appData').doc('stock').set({ data: stock });
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar estoque:', error);
+            return false;
+        }
+    },
+
+    async loadStock() {
+        try {
+            const doc = await db.collection('appData').doc('stock').get();
+            return doc.exists ? doc.data().data : [];
+        } catch (error) {
+            console.error('Erro ao carregar estoque:', error);
+            return [];
+        }
+    },
+
+    setupStockListener(callback) {
+        this.listeners.stock = db.collection('appData').doc('stock')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    callback(doc.data().data);
                 }
-            },
+            }, (error) => {
+                console.error('Erro no listener de estoque:', error);
+            });
+    },
 
-            async loadStock() {
-                try {
-                    const doc = await db.collection('appData').doc('stock').get();
-                    return doc.exists ? doc.data().data : [];
-                } catch (error) {
-                    console.error('Erro ao carregar estoque:', error);
-                    return [];
+    // Entregas
+    async saveDeliveries(deliveries) {
+        try {
+            await db.collection('appData').doc('deliveries').set({ data: deliveries });
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar entregas:', error);
+            return false;
+        }
+    },
+
+    async loadDeliveries() {
+        try {
+            const doc = await db.collection('appData').doc('deliveries').get();
+            return doc.exists ? doc.data().data : [];
+        } catch (error) {
+            console.error('Erro ao carregar entregas:', error);
+            return [];
+        }
+    },
+
+    setupDeliveriesListener(callback) {
+        this.listeners.deliveries = db.collection('appData').doc('deliveries')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    callback(doc.data().data);
                 }
-            },
+            }, (error) => {
+                console.error('Erro no listener de entregas:', error);
+            });
+    },
 
-            // Entregas
-            async saveDeliveries(deliveries) {
-                try {
-                    await db.collection('appData').doc('deliveries').set({ data: deliveries });
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar entregas:', error);
-                    return false;
+    // Ações
+    async saveActions(actions) {
+        try {
+            await db.collection('appData').doc('actions').set({ data: actions });
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar ações:', error);
+            return false;
+        }
+    },
+
+    async loadActions() {
+        try {
+            const doc = await db.collection('appData').doc('actions').get();
+            return doc.exists ? doc.data().data : [];
+        } catch (error) {
+            console.error('Erro ao carregar ações:', error);
+            return [];
+        }
+    },
+
+    setupActionsListener(callback) {
+        this.listeners.actions = db.collection('appData').doc('actions')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    callback(doc.data().data);
                 }
-            },
+            }, (error) => {
+                console.error('Erro no listener de ações:', error);
+            });
+    },
 
-            async loadDeliveries() {
-                try {
-                    const doc = await db.collection('appData').doc('deliveries').get();
-                    return doc.exists ? doc.data().data : [];
-                } catch (error) {
-                    console.error('Erro ao carregar entregas:', error);
-                    return [];
-                }
-            },
+    // Remover todos os listeners
+    removeAllListeners() {
+        Object.values(this.listeners).forEach(unsubscribe => {
+            if (unsubscribe) unsubscribe();
+        });
+        this.listeners = {};
+    },
 
-            // Ações
-            async saveActions(actions) {
-                try {
-                    await db.collection('appData').doc('actions').set({ data: actions });
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar ações:', error);
-                    return false;
-                }
-            },
-
-            async loadActions() {
-                try {
-                    const doc = await db.collection('appData').doc('actions').get();
-                    return doc.exists ? doc.data().data : [];
-                } catch (error) {
-                    console.error('Erro ao carregar ações:', error);
-                    return [];
-                }
-            },
-
-            generateId() {
-                return Date.now().toString(36) + Math.random().toString(36).substr(2);
-            }
-        };
+    generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+};
 
         // Estado da aplicação
         const AppState = {
@@ -1478,13 +1544,13 @@ const firebaseConfig = {
             actions: [],
 
             // Inicializar
-            async init() {
-                await this.setupDefaultUsers();
-                this.loadUserData();
-                this.setupEventListeners();
-                await this.loadData();
-                await this.setupDefaultData();
-            },
+           async init() {
+    await this.setupDefaultUsers();
+    this.loadUserData();
+    this.setupEventListeners();
+    await this.setupDefaultData();
+    this.setupRealTimeListeners(); // NOVO: Configurar listeners em tempo real
+},
 
             // Configurar usuários padrão
             async setupDefaultUsers() {
@@ -1509,38 +1575,73 @@ const firebaseConfig = {
 
             // Configurar dados padrão
             async setupDefaultData() {
-                this.stock = await Storage.loadStock();
-                if (this.stock.length === 0) {
-                    // Dados de exemplo para estoque
-                    this.stock = [
-                        {
-                            id: '1',
-                            epiName: 'Capacete de Segurança',
-                            quantity: 50,
-                            minQuantity: 20,
-                            setor: 'motorizada',
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: '2',
-                            epiName: 'Luvas de Proteção',
-                            quantity: 100,
-                            minQuantity: 50,
-                            setor: 'motorizada',
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: '3',
-                            epiName: 'Botina de Segurança',
-                            quantity: 30,
-                            minQuantity: 25,
-                            setor: 'canteiro',
-                            createdAt: new Date().toISOString()
-                        }
-                    ];
-                    await Storage.saveStock(this.stock);
-                }
+                // Carregar dados iniciais apenas uma vez
+    try {
+        this.showLoading(true);
+        
+        const [users, epis, stock, deliveries, actions] = await Promise.all([
+            Storage.loadUsers(),
+            Storage.loadEpis(),
+            Storage.loadStock(),
+            Storage.loadDeliveries(),
+            Storage.loadActions()
+        ]);
+        
+        this.users = users;
+        this.epis = epis;
+        this.stock = stock;
+        this.deliveries = deliveries;
+        this.actions = actions;
+        
+        // Renderizar dados iniciais
+        this.renderEPITable();
+        this.renderStockTable();
+        this.renderDeliveryTable();
+        this.renderActionsList();
+        this.renderUsersList();
+        this.updateDashboard();
+        this.updateReportsStats();
+        this.updateAdminStats();
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+        this.showToast('Erro ao carregar dados do servidor', 'error');
+    } finally {
+        this.showLoading(false);
+    }
+    
+    // Configurar dados padrão se necessário
+    if (this.stock.length === 0) {
+        // Dados de exemplo para estoque
+        this.stock = [
+            {
+                id: '1',
+                epiName: 'Capacete de Segurança',
+                quantity: 50,
+                minQuantity: 20,
+                setor: 'motorizada',
+                createdAt: new Date().toISOString()
             },
+            {
+                id: '2',
+                epiName: 'Luvas de Proteção',
+                quantity: 100,
+                minQuantity: 50,
+                setor: 'motorizada',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: '3',
+                epiName: 'Botina de Segurança',
+                quantity: 30,
+                minQuantity: 25,
+                setor: 'canteiro',
+                createdAt: new Date().toISOString()
+            }
+        ];
+        await Storage.saveStock(this.stock);
+    }
+},
 
             // Carregar dados do usuário
             loadUserData() {
@@ -1555,43 +1656,6 @@ const firebaseConfig = {
                     this.showMainApp();
                 } else {
                     this.showLogin();
-                }
-            },
-
-            // Carregar todos os dados do Firebase
-            async loadData() {
-                try {
-                    this.showLoading(true);
-                    
-                    // Carregar todos os dados em paralelo
-                    const [users, epis, stock, deliveries, actions] = await Promise.all([
-                        Storage.loadUsers(),
-                        Storage.loadEpis(),
-                        Storage.loadStock(),
-                        Storage.loadDeliveries(),
-                        Storage.loadActions()
-                    ]);
-                    
-                    this.users = users;
-                    this.epis = epis;
-                    this.stock = stock;
-                    this.deliveries = deliveries;
-                    this.actions = actions;
-                    
-                    this.renderEPITable();
-                    this.renderStockTable();
-                    this.renderDeliveryTable();
-                    this.renderActionsList();
-                    this.renderUsersList();
-                    this.updateDashboard();
-                    this.updateReportsStats();
-                    this.updateAdminStats();
-                    
-                } catch (error) {
-                    console.error('Erro ao carregar dados:', error);
-                    this.showToast('Erro ao carregar dados do servidor', 'error');
-                } finally {
-                    this.showLoading(false);
                 }
             },
 
@@ -1653,7 +1717,48 @@ const firebaseConfig = {
                 document.getElementById('stock-search-btn').addEventListener('click', () => this.searchStock());
                 document.getElementById('delivery-search-btn').addEventListener('click', () => this.searchDeliveries());
             },
+// NOVO: Configurar listeners em tempo real
+setupRealTimeListeners() {
+    // Listener para usuários
+    Storage.setupUsersListener((users) => {
+        this.users = users;
+        this.renderUsersList();
+        this.updateAdminStats();
+        console.log('Usuários atualizados em tempo real');
+    });
 
+    // Listener para EPIs
+    Storage.setupEpisListener((epis) => {
+        this.epis = epis;
+        this.renderEPITable();
+        this.updateDashboard();
+        this.updateReportsStats();
+        console.log('EPIs atualizados em tempo real');
+    });
+
+    // Listener para estoque
+    Storage.setupStockListener((stock) => {
+        this.stock = stock;
+        this.renderStockTable();
+        this.updateDashboard();
+        console.log('Estoque atualizado em tempo real');
+    });
+
+    // Listener para entregas
+    Storage.setupDeliveriesListener((deliveries) => {
+        this.deliveries = deliveries;
+        this.renderDeliveryTable();
+        console.log('Entregas atualizadas em tempo real');
+    });
+
+    // Listener para ações
+    Storage.setupActionsListener((actions) => {
+        this.actions = actions;
+        this.renderActionsList();
+        this.updateDashboard();
+        console.log('Ações atualizadas em tempo real');
+    });
+},
             // MOSTRAR/OCULTAR LOADING
             showLoading(show) {
                 document.getElementById('loading').style.display = show ? 'flex' : 'none';
@@ -1692,15 +1797,18 @@ const firebaseConfig = {
 
             // Logout
             handleLogout() {
-                this.currentUser = null;
-                this.currentSetor = null;
-                this.currentUserRole = 'user';
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('currentSetor');
-                localStorage.removeItem('currentUserRole');
-                this.showLogin();
-                this.showToast('Logout realizado!');
-            },
+                // Remover listeners do Firebase
+    Storage.removeAllListeners();
+    
+    this.currentUser = null;
+    this.currentSetor = null;
+    this.currentUserRole = 'user';
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentSetor');
+    localStorage.removeItem('currentUserRole');
+    this.showLogin();
+    this.showToast('Logout realizado!');
+},
 
             // Mostrar aplicação principal - CORRIGIDO
             showMainApp() {
